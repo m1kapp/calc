@@ -125,10 +125,10 @@ function Calculator() {
       </Dialog>
 
       <InAppSheet open={prices} onClose={() => setPrices(false)} title={`한국 vs ${c.name} 물가`}>
-        <div className="pb-4">
+        <div className="px-5 pb-4">
           {!rate ? <p className="text-sm text-zinc-500">환율을 받은 뒤에 볼 수 있어요.</p> : (
             <>
-              <div className="grid grid-cols-[4.5rem_1fr_1fr] items-center gap-x-2 text-center">
+              <div className="grid grid-cols-[4.5rem_1fr_1fr] items-start gap-x-2 text-center">
                 <span />
                 <Side flag="🇰🇷" name="한국" />
                 <Side flag={c.flag} name={c.name} accent />
@@ -246,7 +246,7 @@ function Line({ label, left, right, sub, diff, bars }: {
   return (
     <>
       <span className="col-span-3 border-t border-zinc-100" />
-      <span className="py-3 text-left text-xs font-semibold text-zinc-500">{label}</span>
+      <span className="pt-[17px] pb-3 text-left text-xs font-semibold text-zinc-500">{label}</span>
       <div className="py-3 tabular-nums">
         <div className="text-[17px] font-semibold text-zinc-700">{left}</div>
         {bars && bar(bars[0])}
