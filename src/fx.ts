@@ -64,6 +64,41 @@ export function bigmac(code: string, krwPer: number, t: BigMac = BIGMAC) {
   return { local, krw, diff: Math.round((krw / t.KRW - 1) * 100) };
 }
 
+// 물가 수준 — 세계은행 가계소비 PPP 환산계수(PA.NUS.PRVT.PP, 현지 통화 / 국제달러).
+// 오늘 환율과 나누면 "같은 장바구니가 한국의 몇 %"가 된다. 매년 갱신 — 화면은 API 를 직접 받고, 아래는 2025년 사본.
+// 대만(세계은행 비회원)과 유로존(최신값 비어 있음)은 없다.
+// ponytail: 2021 국제비교(ICP) 조사를 세계은행이 이어서 추정한 값이라 "대략"으로만 쓴다.
+export type Ppp = { year: string; KRW: number; local: Record<string, number> };
+const WB_ISO: Record<string, string> = { KRW: "KOR", JPY: "JPN", VND: "VNM", USD: "USA", THB: "THA", HKD: "HKG", CNY: "CHN",
+  PHP: "PHL", SGD: "SGP", IDR: "IDN", GBP: "GBR", AUD: "AUS", CHF: "CHE", MYR: "MYS", MXN: "MEX", INR: "IND" };
+export const PPP: Ppp = {
+  year: "2025",
+  KRW: 880.1254,
+  local: { AUD: 1.4646, CHF: 1.0655, CNY: 3.4596, GBP: 0.7015, HKD: 5.7676, IDR: 5065.969, INR: 19.8389, JPY: 103.3366,
+    MXN: 11.3088, MYR: 1.4306, PHP: 20.5335, SGD: 1.0238, THB: 10.6063, USD: 1, VND: 7203.3696 },
+};
+export function parsePpp(rows: { countryiso3code: string; date: string; value: number | null }[]): Ppp {
+  const t: Ppp = { year: "", KRW: 0, local: {} };
+  for (const [cur, iso] of Object.entries(WB_ISO)) {
+    const r = rows.find((x) => x.countryiso3code === iso && x.value);
+    if (!r) continue;
+    if (cur === "KRW") t.KRW = r.value!;
+    else t.local[cur] = r.value!;
+    if (r.date > t.year) t.year = r.date;
+  }
+  if (!t.KRW) throw new Error("물가표에 한국이 없어요");
+  return t;
+}
+export const fetchPpp = () =>
+  fetch(`https://api.worldbank.org/v2/country/${Object.values(WB_ISO).join(";")}/indicator/PA.NUS.PRVT.PP?format=json&mrnev=1&per_page=100`)
+    .then((r) => r.json()).then((d) => parsePpp(d[1]));
+
+// 한국 = 100 일 때 그 나라 물가(42 = 한국의 42%)
+export function priceLevel(code: string, krwPer: number, t: Ppp = PPP) {
+  const local = t.local[code];
+  return local && krwPer ? Math.round((local * krwPer / t.KRW) * 100) : null;
+}
+
 export const findCurrency = (code: string) => CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0];
 
 // 원 기준 환율표 → "1 단위 = 몇 원". 하루 한 번 갱신되는 무료 공개 API(키 없음, CORS 허용).

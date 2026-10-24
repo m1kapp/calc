@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell, AppShellContent, AppShellHeader, Dialog, ShareButton, ToastProvider, useLocalStorage, useToast, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchRates, monthLabel, type BigMac, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { AppShell, AppShellContent, AppShellHeader, Dialog, InAppSheet, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
+import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // npx m1kkit track https://calc.m1k.app 로 발급받은 slug (Vite라 env 대신 prop)
@@ -10,9 +10,7 @@ export default function App() {
   return (
     <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG}>
       <AppShell accent={ACCENT}>
-        <ToastProvider>
-          <Calculator />
-        </ToastProvider>
+        <Calculator />
       </AppShell>
     </Watermark>
   );
@@ -23,12 +21,13 @@ function Calculator() {
   const [manual, setManual] = useLocalStorage<Record<string, number>>("calc:manual", {});
   const [cached, setCached] = useLocalStorage<Rates | null>("calc:rates", null);
   const [mactab, setMactab] = useLocalStorage<(BigMac & { at: number }) | null>("calc:bigmac", null);
+  const [ppptab, setPpptab] = useLocalStorage<(Ppp & { at: number }) | null>("calc:ppp", null);
   const [calc, setCalc] = useState<Calc>(EMPTY);
   const [krwFirst, setKrwFirst] = useState(false); // 위 칸에 원화를 넣고 외화를 본다
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState(false);
-  const toast = useToast();
+  const [prices, setPrices] = useState(false);
 
   // 받은 지 12시간 안 됐으면 다시 안 받는다. 실패해도 지난 환율로 계속 쓴다.
   useEffect(() => {
@@ -41,7 +40,13 @@ function Calculator() {
     if (mactab && Date.now() - mactab.at < 3 * 86400e3) return;
     fetchBigmac().then((t) => setMactab({ ...t, at: Date.now() }), () => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // 물가표는 1년에 한 번 바뀐다 — 같은 방식으로 일주일에 한 번만 확인
+  useEffect(() => {
+    if (ppptab && Date.now() - ppptab.at < 7 * 86400e3) return;
+    fetchPpp().then((t) => setPpptab({ ...t, at: Date.now() }), () => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const mt = mactab ?? BIGMAC;
+  const pt = ppptab ?? PPP;
 
   const c = findCurrency(code);
   const auto = cached?.krwPer[code];
@@ -53,18 +58,11 @@ function Calculator() {
   const bigZeros = krwFirst || c.per === 100;
   const mac = rate ? bigmac(code, rate, mt) : null;
   const macs = mac ? (krwFirst ? amount : shown) / mac.krw : 0; // 지금 금액이면 빅맥 몇 개
+  const level = rate ? priceLevel(code, rate, pt) : null;
 
-  const key = (k: Key) => (k === "burger" ? burger() : setCalc((s) => press(s, k)));
+  const key = (k: Key) => (k === "burger" ? setPrices(true) : setCalc((s) => press(s, k)));
   const pick = (next: string) => { setCode(next); setPicking(false); };
   const swap = () => { setKrwFirst((v) => !v); setCalc({ ...EMPTY, cur: String(shown) }); };
-  // 🍔 만 원이 현지 돈으로 대략 얼마인지 한 번에 — 2024 버전부터 있던 버튼
-  const burger = () => {
-    if (!rate) return;
-    setKrwFirst(false);
-    setCalc({ ...EMPTY, cur: String(roughly(10000 / rate)) });
-    toast(mac ? `만 원이면 ${c.name}에서 빅맥 ${(10000 / mac.krw).toFixed(1)}개예요. 즐거운 여행 되세요!` : "만 원이 대략 얼마인지 기억해 두고, 즐거운 여행 되세요!");
-    petals();
-  };
 
   return (
     <>
@@ -104,21 +102,6 @@ function Calculator() {
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
           <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
 
-          {mac && (
-            <div className="mx-4 mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900 flex items-center gap-2.5">
-              <span className="text-2xl">🍔</span>
-              <div className="flex-1 min-w-0 leading-snug">
-                <div>
-                  {c.name} 빅맥 <b>{mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원</b>
-                  <span className="text-amber-700"> · 한국 {mt.KRW.toLocaleString()}원보다 {Math.abs(mac.diff)}% {mac.diff < 0 ? "싸요" : "비싸요"}</span>
-                </div>
-                <div className="text-xs text-amber-700 tabular-nums">
-                  {amount > 0 ? `지금 금액이면 빅맥 ${macs < 10 ? macs.toFixed(1) : Math.floor(macs).toLocaleString()}개` : `현지 가격 ${mac.local.toLocaleString()} ${c.unit}`} · {monthLabel(mt.date)} 빅맥지수
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="text-right text-zinc-400 px-5 h-7 text-lg tabular-nums">
             {calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""}
           </div>
@@ -140,6 +123,36 @@ function Calculator() {
           ))}
         </div>
       </Dialog>
+
+      <InAppSheet open={prices} onClose={() => setPrices(false)} title={`${c.flag} ${c.name} 물가`}>
+        <div className="flex flex-col gap-3 pb-4">
+          {!rate ? <p className="text-sm text-zinc-500">환율을 받은 뒤에 볼 수 있어요.</p> : (
+            <>
+              <Fact emoji="💵" title="만 원이면">
+                대략 <b>{roughly(10000 / rate).toLocaleString()} {c.unit}</b>
+                {mac && <> · 빅맥 {(10000 / mac.krw).toFixed(1)}개</>}
+              </Fact>
+              {mac && (
+                <Fact emoji="🍔" title="빅맥 한 개" note={`이코노미스트 빅맥지수 · ${monthLabel(mt.date)}`}>
+                  {mac.local.toLocaleString()} {c.unit} = <b>{mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원</b>
+                  <br />한국 {mt.KRW.toLocaleString()}원보다 {Math.abs(mac.diff)}% {mac.diff < 0 ? "싸요" : "비싸요"}
+                  {amount > 0 && <><br />지금 금액이면 빅맥 {macs < 10 ? macs.toFixed(1) : Math.floor(macs).toLocaleString()}개</>}
+                </Fact>
+              )}
+              {level && (
+                <Fact emoji="🛒" title="전체 물가" note={`세계은행 가계소비 물가 · ${pt.year}년 · 대략`}>
+                  한국이 100이면 <b>{level}</b>
+                  <div className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
+                    <Bar label="한국" value={100} max={Math.max(100, level)} />
+                    <Bar label={c.name} value={level} max={Math.max(100, level)} accent />
+                  </div>
+                </Fact>
+              )}
+              {!mac && !level && <p className="text-sm text-zinc-500">이 나라는 아직 물가 자료가 없어요.</p>}
+            </>
+          )}
+        </div>
+      </InAppSheet>
 
       <ManualRate open={editing} cur={c} initial={rate} onClose={() => setEditing(false)}
         onSave={(v) => { setManual((m) => ({ ...m, [code]: v / c.per })); setEditing(false); }} />
@@ -177,7 +190,7 @@ function Keypad({ onKey, zeros, clearLabel }: { onKey: (k: Key) => void; zeros: 
       {keys.map(([k, label, kind]) =>
         (
           <button key={k} onClick={() => onKey(k)}
-            aria-label={k === "burger" ? "만 원이면 얼마" : k === "back" ? "지우기" : undefined}
+            aria-label={k === "burger" ? "이 나라 물가 보기" : k === "back" ? "지우기" : undefined}
             className={`h-16 text-[26px] text-white active:scale-90 transition-transform ${kind === "fn" ? "bg-black" : ""}`}
             style={kind === "op" ? { background: ACCENT } : undefined}>
             {label}
@@ -210,20 +223,27 @@ function ManualRate({ open, cur, initial, onClose, onSave }: {
   );
 }
 
-// 꽃잎 터뜨리기 — 4초 뒤 스스로 치운다. 움직임 줄이기 설정이면 안 한다.
-function petals() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const colors = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#4dabf7", "#9775fa"];
-  for (let i = 0; i < 60; i++) {
-    const p = document.createElement("div");
-    const size = 8 + Math.random() * 10;
-    Object.assign(p.style, {
-      position: "fixed", zIndex: "60", pointerEvents: "none", borderRadius: "50% 0",
-      left: `${Math.random() * 100}vw`, top: "-20px", width: `${size}px`, height: `${size}px`,
-      background: colors[i % colors.length],
-      animation: `petal ${2 + Math.random() * 2}s ease-in ${Math.random()}s forwards`,
-    });
-    document.body.append(p);
-    setTimeout(() => p.remove(), 4000);
-  }
+function Fact({ emoji, title, note, children }: { emoji: string; title: string; note?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex gap-3 rounded-xl bg-zinc-50 p-3">
+      <span className="text-2xl leading-none">{emoji}</span>
+      <div className="flex-1 min-w-0 text-sm leading-relaxed text-zinc-800">
+        <div className="text-xs font-semibold text-zinc-500 mb-0.5">{title}</div>
+        {children}
+        {note && <div className="mt-1 text-[11px] text-zinc-400">{note}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Bar({ label, value, max, accent }: { label: string; value: number; max: number; accent?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-16 shrink-0 truncate">{label}</span>
+      <div className="flex-1 h-2 rounded-full bg-zinc-200 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${(value / max) * 100}%`, background: accent ? ACCENT : "#a1a1aa" }} />
+      </div>
+      <span className="w-8 text-right tabular-nums">{value}</span>
+    </div>
+  );
 }

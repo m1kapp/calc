@@ -1,7 +1,7 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { bigmac, BIGMAC, EMPTY, monthLabel, parseBigmac, korean, press, roughly, type Key } from "./fx.ts";
+import { bigmac, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, roughly, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -38,5 +38,10 @@ if (csv) {
 assert.deepEqual(parseBigmac("h\nKorea,KOR,KRW,5000,,,,2025-01-01\nKorea,KOR,KRW,5700,,,,2026-07-01\nGermany,DEU,EUR,6.99,,,,2026-07-01\nEuro area,EUZ,EUR,6.19,,,,2026-07-01"),
   { date: "2026-07-01", KRW: 5700, local: { EUR: 6.19 } });
 assert.equal(monthLabel("2026-07-01"), "2026년 7월");
+
+assert.equal(priceLevel("VND", 1 / 18.2), 45); // 7203 동 × (1/18.2)원 ÷ 880원
+assert.equal(priceLevel("TWD", 0.045), null);
+assert.deepEqual(parsePpp([{ countryiso3code: "KOR", date: "2025", value: 880 }, { countryiso3code: "VNM", date: "2025", value: 7203 }, { countryiso3code: "JPN", date: "2025", value: null }]),
+  { year: "2025", KRW: 880, local: { VND: 7203 } });
 
 console.log("fx ok");
