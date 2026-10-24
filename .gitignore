@@ -6,3 +6,7 @@ dist
 .vercel
 .m1k.json
 .env*
+
+# m1kkit stats 산출물 — 빌드마다 다시 만든다
+public/kit-stats.json
+.fixearly-history.json

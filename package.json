@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "m1kkit stats && vite",
+    "build": "m1kkit stats && tsc -b && vite build",
     "preview": "vite preview",
     "check": "node --experimental-strip-types src/fx.check.ts"
   },
