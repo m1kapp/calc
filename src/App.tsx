@@ -4,11 +4,11 @@ import { CURRENCIES, EMPTY, fetchRates, findCurrency, formatInput, korean, press
 
 const ACCENT = "#3b82f6";
 // npx m1kkit track https://calc.m1k.app 로 발급받은 slug (Vite라 env 대신 prop)
-const TRACK_SLUG = "";
+const TRACK_SLUG = "gN";
 
 export default function App() {
   return (
-    <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG || undefined} track={!!TRACK_SLUG}>
+    <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG}>
       <AppShell accent={ACCENT}>
         <Calculator />
       </AppShell>
