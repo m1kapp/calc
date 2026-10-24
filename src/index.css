@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+html {
+  font-family: "Pretendard Variable", "Pretendard", system-ui, -apple-system, sans-serif, "Tossface";
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
