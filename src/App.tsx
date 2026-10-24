@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, Dialog, ShareButton, ToastProvider, useLocalStorage, useToast, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchRates, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchRates, monthLabel, type BigMac, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // npx m1kkit track https://calc.m1k.app 로 발급받은 slug (Vite라 env 대신 prop)
@@ -22,6 +22,7 @@ function Calculator() {
   const [code, setCode] = useLocalStorage("calc:currency", "JPY");
   const [manual, setManual] = useLocalStorage<Record<string, number>>("calc:manual", {});
   const [cached, setCached] = useLocalStorage<Rates | null>("calc:rates", null);
+  const [mactab, setMactab] = useLocalStorage<(BigMac & { at: number }) | null>("calc:bigmac", null);
   const [calc, setCalc] = useState<Calc>(EMPTY);
   const [krwFirst, setKrwFirst] = useState(false); // 위 칸에 원화를 넣고 외화를 본다
   const [picking, setPicking] = useState(false);
@@ -35,6 +36,13 @@ function Calculator() {
     fetchRates().then(setCached, () => setError(true));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 빅맥 표는 반년에 한 번 바뀐다 — 사흘에 한 번만 원본을 확인. 실패하면 들고 있는 판을 쓴다.
+  useEffect(() => {
+    if (mactab && Date.now() - mactab.at < 3 * 86400e3) return;
+    fetchBigmac().then((t) => setMactab({ ...t, at: Date.now() }), () => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const mt = mactab ?? BIGMAC;
+
   const c = findCurrency(code);
   const auto = cached?.krwPer[code];
   const rate = manual[code] ?? auto; // 1 단위 = 몇 원
@@ -43,7 +51,7 @@ function Calculator() {
   const shown = roundFor(other, !krwFirst || c.per === 100); // 큰 숫자와 만 단위 표기가 같은 값을 읽게
   const top = krwFirst ? KRW : c, bottom = krwFirst ? c : KRW;
   const bigZeros = krwFirst || c.per === 100;
-  const mac = rate ? bigmac(code, rate) : null;
+  const mac = rate ? bigmac(code, rate, mt) : null;
   const macs = mac ? (krwFirst ? amount : shown) / mac.krw : 0; // 지금 금액이면 빅맥 몇 개
 
   const key = (k: Key) => (k === "burger" ? burger() : setCalc((s) => press(s, k)));
@@ -102,10 +110,10 @@ function Calculator() {
               <div className="flex-1 min-w-0 leading-snug">
                 <div>
                   {c.name} 빅맥 <b>{mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원</b>
-                  <span className="text-amber-700"> · 한국 {BIGMAC.KRW.toLocaleString()}원보다 {Math.abs(mac.diff)}% {mac.diff < 0 ? "싸요" : "비싸요"}</span>
+                  <span className="text-amber-700"> · 한국 {mt.KRW.toLocaleString()}원보다 {Math.abs(mac.diff)}% {mac.diff < 0 ? "싸요" : "비싸요"}</span>
                 </div>
                 <div className="text-xs text-amber-700 tabular-nums">
-                  {amount > 0 ? `지금 금액이면 빅맥 ${macs < 10 ? macs.toFixed(1) : Math.floor(macs).toLocaleString()}개` : `현지 가격 ${mac.local.toLocaleString()} ${c.unit}`} · {BIGMAC.date} 빅맥지수
+                  {amount > 0 ? `지금 금액이면 빅맥 ${macs < 10 ? macs.toFixed(1) : Math.floor(macs).toLocaleString()}개` : `현지 가격 ${mac.local.toLocaleString()} ${c.unit}`} · {monthLabel(mt.date)} 빅맥지수
                 </div>
               </div>
             </div>

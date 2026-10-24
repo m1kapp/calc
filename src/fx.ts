@@ -23,21 +23,45 @@ export const CURRENCIES: Currency[] = [
   { code: "INR", name: "인도", unit: "루피", flag: "🇮🇳", per: 1 },
 ];
 
-// 빅맥 현지 가격 — The Economist Big Mac index 2026-07-01 (MIT, github.com/TheEconomist/big-mac-data)
-// 같은 물건 하나로 그 나라 물가를 가늠한다. 반년마다 갱신된다 — 새 판이 나오면 숫자만 바꾼다.
-export const BIGMAC = {
-  date: "2026년 7월",
+// 빅맥 현지 가격 — The Economist Big Mac index (MIT, github.com/TheEconomist/big-mac-data)
+// 같은 물건 하나로 그 나라 물가를 가늠한다. 반년마다 새 판이 나오니 화면은 원본 CSV 를 직접 받아 쓰고,
+// 아래 숫자는 못 받았을 때 쓰는 2026-07-01 판 사본이다.
+export type BigMac = { date: string; KRW: number; local: Record<string, number> };
+export const BIGMAC: BigMac = {
+  date: "2026-07-01",
   KRW: 5700,
   local: { JPY: 500, VND: 76000, USD: 6.22, TWD: 78, THB: 135, HKD: 25.5, CNY: 26.5, PHP: 169, SGD: 7.45,
-    IDR: 43000, EUR: 6.19, GBP: 5.49, AUD: 8.5, CHF: 7.3, MYR: 14.55, MXN: 109, INR: 236.25 } as Record<string, number>,
+    IDR: 43000, EUR: 6.19, GBP: 5.49, AUD: 8.5, CHF: 7.3, MYR: 14.55, MXN: 109, INR: 236.25 },
 };
+export const BIGMAC_CSV = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/source-data/big-mac-source-data-v2.csv";
+
+// 통화마다 가장 최근 행을 쓴다. 유로는 나라별 가격이 따로 있어 유로존 평균(EUZ)만 본다.
+export function parseBigmac(csv: string): BigMac {
+  const t: BigMac = { date: "", KRW: 0, local: {} };
+  const seen: Record<string, string> = {};
+  for (const line of csv.trim().split("\n").slice(1)) {
+    const [, iso, cur, price, , , , date] = line.split(",");
+    if (cur === "EUR" && iso !== "EUZ") continue;
+    if ((seen[cur] ?? "") > date) continue;
+    seen[cur] = date;
+    if (cur === "KRW") t.KRW = +price;
+    else t.local[cur] = +price;
+    if (date > t.date) t.date = date;
+  }
+  if (!t.KRW) throw new Error("빅맥 표에 한국이 없어요");
+  return t;
+}
+export const fetchBigmac = () => fetch(BIGMAC_CSV).then((r) => r.text()).then(parseBigmac);
+
+// "2026-07-01" → "2026년 7월"
+export const monthLabel = (d: string) => `${d.slice(0, 4)}년 ${+d.slice(5, 7)}월`;
 
 // 그 나라 빅맥을 원화로 바꾼 값과 한국 대비 비율(-32 = 32% 싸다)
-export function bigmac(code: string, krwPer: number) {
-  const local = BIGMAC.local[code];
+export function bigmac(code: string, krwPer: number, t: BigMac = BIGMAC) {
+  const local = t.local[code];
   if (!local || !krwPer) return null;
   const krw = local * krwPer;
-  return { local, krw, diff: Math.round((krw / BIGMAC.KRW - 1) * 100) };
+  return { local, krw, diff: Math.round((krw / t.KRW - 1) * 100) };
 }
 
 export const findCurrency = (code: string) => CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0];
