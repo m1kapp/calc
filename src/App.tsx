@@ -124,31 +124,30 @@ function Calculator() {
         </div>
       </Dialog>
 
-      <InAppSheet open={prices} onClose={() => setPrices(false)} title={`${c.flag} ${c.name} 물가`}>
-        <div className="flex flex-col gap-3 pb-4">
+      <InAppSheet open={prices} onClose={() => setPrices(false)} title={`한국 vs ${c.name} 물가`}>
+        <div className="pb-4">
           {!rate ? <p className="text-sm text-zinc-500">환율을 받은 뒤에 볼 수 있어요.</p> : (
             <>
-              <Fact emoji="💵" title="만 원이면">
-                대략 <b>{roughly(10000 / rate).toLocaleString()} {c.unit}</b>
-                {mac && <> · 빅맥 {(10000 / mac.krw).toFixed(1)}개</>}
-              </Fact>
-              {mac && (
-                <Fact emoji="🍔" title="빅맥 한 개" note={`이코노미스트 빅맥지수 · ${monthLabel(mt.date)}`}>
-                  {mac.local.toLocaleString()} {c.unit} = <b>{mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원</b>
-                  <br />한국 {mt.KRW.toLocaleString()}원보다 {Math.abs(mac.diff)}% {mac.diff < 0 ? "싸요" : "비싸요"}
-                  {amount > 0 && <><br />지금 금액이면 빅맥 {macs < 10 ? macs.toFixed(1) : Math.floor(macs).toLocaleString()}개</>}
-                </Fact>
-              )}
-              {level && (
-                <Fact emoji="🛒" title="전체 물가" note={`세계은행 가계소비 물가 · ${pt.year}년 · 대략`}>
-                  한국이 100이면 <b>{level}</b>
-                  <div className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
-                    <Bar label="한국" value={100} max={Math.max(100, level)} />
-                    <Bar label={c.name} value={level} max={Math.max(100, level)} accent />
-                  </div>
-                </Fact>
-              )}
-              {!mac && !level && <p className="text-sm text-zinc-500">이 나라는 아직 물가 자료가 없어요.</p>}
+              <div className="grid grid-cols-[4.5rem_1fr_1fr] items-center gap-x-2 text-center">
+                <span />
+                <Side flag="🇰🇷" name="한국" />
+                <Side flag={c.flag} name={c.name} accent />
+
+                <Line label="만 원" left="10,000원" right={`약 ${roughly(10000 / rate).toLocaleString()}${c.unit}`} />
+                {mac && <>
+                  <Line label="빅맥 한 개" left={`${mt.KRW.toLocaleString()}원`}
+                    right={`${mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원`}
+                    sub={`${mac.local.toLocaleString()}${c.unit}`} diff={mac.diff} />
+                  <Line label="만 원으로 빅맥" left={`${(10000 / mt.KRW).toFixed(1)}개`} right={`${(10000 / mac.krw).toFixed(1)}개`} />
+                  {amount > 0 && <Line label="지금 금액 빅맥" left={`${count((krwFirst ? amount : shown) / mt.KRW)}개`} right={`${count(macs)}개`} />}
+                </>}
+                {level && <Line label="전체 물가" left="100" right={String(level)} diff={level - 100} bars={[100, level]} />}
+              </div>
+              {!mac && !level && <p className="mt-3 text-sm text-zinc-500">이 나라는 아직 물가 자료가 없어요.</p>}
+              <p className="mt-4 text-[11px] leading-relaxed text-zinc-400">
+                {mac && <>빅맥 · 이코노미스트 빅맥지수 {monthLabel(mt.date)}<br /></>}
+                {level && <>전체 물가 · 세계은행 가계소비 물가 {pt.year}년 · 오늘 환율로 계산한 대략값</>}
+              </p>
             </>
           )}
         </div>
@@ -223,27 +222,45 @@ function ManualRate({ open, cur, initial, onClose, onSave }: {
   );
 }
 
-function Fact({ emoji, title, note, children }: { emoji: string; title: string; note?: string; children: React.ReactNode }) {
+const count = (n: number) => (n < 10 ? n.toFixed(1) : Math.floor(n).toLocaleString());
+
+function Side({ flag, name, accent }: { flag: string; name: string; accent?: boolean }) {
   return (
-    <div className="flex gap-3 rounded-xl bg-zinc-50 p-3">
-      <span className="text-2xl leading-none">{emoji}</span>
-      <div className="flex-1 min-w-0 text-sm leading-relaxed text-zinc-800">
-        <div className="text-xs font-semibold text-zinc-500 mb-0.5">{title}</div>
-        {children}
-        {note && <div className="mt-1 text-[11px] text-zinc-400">{note}</div>}
-      </div>
+    <div className="flex flex-col items-center pb-2">
+      <span className="text-3xl leading-none">{flag}</span>
+      <span className="mt-1 text-sm font-bold" style={accent ? { color: ACCENT } : undefined}>{name}</span>
     </div>
   );
 }
 
-function Bar({ label, value, max, accent }: { label: string; value: number; max: number; accent?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-zinc-200 overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${(value / max) * 100}%`, background: accent ? ACCENT : "#a1a1aa" }} />
-      </div>
-      <span className="w-8 text-right tabular-nums">{value}</span>
+// 한 줄 = 라벨 | 한국 | 그 나라. diff 는 한국 대비 % (음수면 싸다)
+function Line({ label, left, right, sub, diff, bars }: {
+  label: string; left: string; right: string; sub?: string; diff?: number; bars?: [number, number];
+}) {
+  const max = bars ? Math.max(...bars) : 0;
+  const bar = (v: number, accent?: boolean) => bars && (
+    <div className="mt-1.5 mx-auto h-1.5 w-4/5 rounded-full bg-zinc-200 overflow-hidden">
+      <div className="h-full rounded-full" style={{ width: `${(v / max) * 100}%`, background: accent ? ACCENT : "#a1a1aa" }} />
     </div>
+  );
+  return (
+    <>
+      <span className="col-span-3 border-t border-zinc-100" />
+      <span className="py-3 text-left text-xs font-semibold text-zinc-500">{label}</span>
+      <div className="py-3 tabular-nums">
+        <div className="text-[17px] font-semibold text-zinc-700">{left}</div>
+        {bars && bar(bars[0])}
+      </div>
+      <div className="py-3 tabular-nums">
+        <div className="text-[17px] font-bold text-zinc-900">{right}</div>
+        {sub && <div className="text-[11px] text-zinc-400">{sub}</div>}
+        {bars && bar(bars[1], true)}
+        {diff !== undefined && diff !== 0 && (
+          <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${diff < 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+            {Math.abs(diff)}% {diff < 0 ? "싸요" : "비싸요"}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
