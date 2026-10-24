@@ -1,7 +1,7 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { bigmac, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, roughly, type Key } from "./fx.ts";
+import { bigmac, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, roughly, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -43,5 +43,9 @@ assert.equal(priceLevel("VND", 1 / 18.2), 45); // 7203 동 × (1/18.2)원 ÷ 880
 assert.equal(priceLevel("TWD", 0.045), null);
 assert.deepEqual(parsePpp([{ countryiso3code: "KOR", date: "2025", value: 880 }, { countryiso3code: "VNM", date: "2025", value: 7203 }, { countryiso3code: "JPN", date: "2025", value: null }]),
   { year: "2025", KRW: 880, local: { VND: 7203 } });
+
+assert.equal(findCode("vnd"), "VND");
+assert.equal(findCode(""), null);
+assert.equal(findCode("index.html"), null);
 
 console.log("fx ok");

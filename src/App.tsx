@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, Dialog, InAppSheet, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -17,7 +17,10 @@ export default function App() {
 }
 
 function Calculator() {
-  const [code, setCode] = useLocalStorage("calc:currency", "JPY");
+  const [saved, setCode] = useLocalStorage("calc:currency", "JPY");
+  // 나라별 주소: /vnd · 예전 calcreator 의 /currency/vnd 도 받는다. 주소가 저장값보다 우선.
+  const [fromUrl, setFromUrl] = useState(() => findCode(location.pathname.split("/").pop() ?? ""));
+  const code = fromUrl ?? saved;
   const [manual, setManual] = useLocalStorage<Record<string, number>>("calc:manual", {});
   const [cached, setCached] = useLocalStorage<Rates | null>("calc:rates", null);
   const [mactab, setMactab] = useLocalStorage<(BigMac & { at: number }) | null>("calc:bigmac", null);
@@ -49,6 +52,10 @@ function Calculator() {
   const pt = ppptab ?? PPP;
 
   const c = findCurrency(code);
+  useEffect(() => {
+    history.replaceState(null, "", `/${code.toLowerCase()}`);
+    document.title = `${c.name} 여행용 환율계산기`;
+  }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
   const auto = cached?.krwPer[code];
   const rate = manual[code] ?? auto; // 1 단위 = 몇 원
   const amount = +calc.cur;
@@ -61,7 +68,7 @@ function Calculator() {
   const level = rate ? priceLevel(code, rate, pt) : null;
 
   const key = (k: Key) => (k === "burger" ? setPrices(true) : setCalc((s) => press(s, k)));
-  const pick = (next: string) => { setCode(next); setPicking(false); };
+  const pick = (next: string) => { setCode(next); setFromUrl(null); setPicking(false); };
   const swap = () => { setKrwFirst((v) => !v); setCalc({ ...EMPTY, cur: String(shown) }); };
 
   return (
@@ -71,7 +78,7 @@ function Calculator() {
           <h1 className="text-lg font-black tracking-tight text-zinc-900">
             <span style={{ color: ACCENT }}>{c.name} 여행용</span> 환율계산기
           </h1>
-          <ShareButton url="https://calc.m1k.app" title="여행용 환율계산기" label="공유" />
+          <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" />
         </div>
       </AppShellHeader>
       <AppShellContent>

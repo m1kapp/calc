@@ -99,6 +99,8 @@ export function priceLevel(code: string, krwPer: number, t: Ppp = PPP) {
   return local && krwPer ? Math.round((local * krwPer / t.KRW) * 100) : null;
 }
 
+// "vnd" → "VND", 모르는 코드는 null
+export const findCode = (s: string) => CURRENCIES.find((c) => c.code === s.toUpperCase())?.code ?? null;
 export const findCurrency = (code: string) => CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0];
 
 // 원 기준 환율표 → "1 단위 = 몇 원". 하루 한 번 갱신되는 무료 공개 API(키 없음, CORS 허용).
