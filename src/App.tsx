@@ -37,12 +37,13 @@ function Calculator() {
   const rate = manual[code] ?? auto; // 1 단위 = 몇 원
   const amount = +calc.cur;
   const other = rate ? (krwFirst ? amount / rate : amount * rate) : 0;
+  const shown = roundFor(other, !krwFirst || c.per === 100); // 큰 숫자와 만 단위 표기가 같은 값을 읽게
   const top = krwFirst ? KRW : c, bottom = krwFirst ? c : KRW;
   const bigZeros = krwFirst || c.per === 100;
 
   const key = (k: Key) => (k === "swap" ? swap() : setCalc((s) => press(s, k)));
   const pick = (next: string) => { setCode(next); setPicking(false); };
-  const swap = () => { setKrwFirst((v) => !v); setCalc({ ...EMPTY, cur: String(roundFor(other, !krwFirst || c.per === 100)) }); };
+  const swap = () => { setKrwFirst((v) => !v); setCalc({ ...EMPTY, cur: String(shown) }); };
 
   return (
     <>
@@ -78,7 +79,7 @@ function Calculator() {
           </div>
 
           <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong />
-          <Row cur={bottom} value={roundFor(other, !krwFirst || c.per === 100).toLocaleString()} sub={korean(other)} />
+          <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
 
           <div className="text-right text-zinc-400 px-5 h-7 text-lg tabular-nums">
             {calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""}
