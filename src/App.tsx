@@ -111,14 +111,14 @@ function Calculator() {
       </AppShellContent>
 
       <Dialog open={picking} onClose={() => setPicking(false)} title="어디로 가세요">
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-3 gap-2">
           {CURRENCIES.map((x) => (
             <button key={x.code} onClick={() => pick(x.code)}
-              className="flex flex-col items-center gap-0.5 p-2 rounded-xl border text-xs"
-              style={x.code === code ? { background: ACCENT, color: "white", borderColor: ACCENT } : undefined}>
+              className="flex flex-col items-center gap-0.5 py-3 rounded-2xl bg-zinc-100/70 text-xs text-zinc-800 active:scale-95 transition-transform"
+              style={x.code === code ? { background: ACCENT, color: "white" } : undefined}>
               <span className="text-2xl">{x.flag}</span>
               <span className="font-semibold">{x.name}</span>
-              <span className="opacity-70">{x.code} · {x.unit}</span>
+              <span className="opacity-60">{x.code} · {x.unit}</span>
             </button>
           ))}
         </div>
