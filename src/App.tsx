@@ -3,12 +3,12 @@ import { AppShell, AppShellContent, AppShellHeader, Dialog, InAppSheet, ShareBut
 import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
-// npx m1kkit track https://calc.m1k.app 로 발급받은 slug (Vite라 env 대신 prop)
+// m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
 const TRACK_SLUG = "gN";
 
 export default function App() {
   return (
-    <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG}>
+    <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG} claimed>
       <AppShell accent={ACCENT}>
         <Calculator />
       </AppShell>
