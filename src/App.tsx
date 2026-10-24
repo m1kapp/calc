@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, Dialog, ShareButton, ToastProvider, useLocalStorage, useToast, Watermark, watermarkTint } from "@m1kapp/kit";
-import { CURRENCIES, EMPTY, fetchRates, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchRates, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // npx m1kkit track https://calc.m1k.app 로 발급받은 slug (Vite라 env 대신 prop)
@@ -43,6 +43,8 @@ function Calculator() {
   const shown = roundFor(other, !krwFirst || c.per === 100); // 큰 숫자와 만 단위 표기가 같은 값을 읽게
   const top = krwFirst ? KRW : c, bottom = krwFirst ? c : KRW;
   const bigZeros = krwFirst || c.per === 100;
+  const mac = rate ? bigmac(code, rate) : null;
+  const macs = mac ? (krwFirst ? amount : shown) / mac.krw : 0; // 지금 금액이면 빅맥 몇 개
 
   const key = (k: Key) => (k === "burger" ? burger() : setCalc((s) => press(s, k)));
   const pick = (next: string) => { setCode(next); setPicking(false); };
@@ -52,7 +54,7 @@ function Calculator() {
     if (!rate) return;
     setKrwFirst(false);
     setCalc({ ...EMPTY, cur: String(roughly(10000 / rate)) });
-    toast("만 원이 대략 얼마인지 기억해 두고, 즐거운 여행 되세요!");
+    toast(mac ? `만 원이면 ${c.name}에서 빅맥 ${(10000 / mac.krw).toFixed(1)}개예요. 즐거운 여행 되세요!` : "만 원이 대략 얼마인지 기억해 두고, 즐거운 여행 되세요!");
     petals();
   };
 
@@ -93,6 +95,21 @@ function Calculator() {
           <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
           <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
+
+          {mac && (
+            <div className="mx-4 mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900 flex items-center gap-2.5">
+              <span className="text-2xl">🍔</span>
+              <div className="flex-1 min-w-0 leading-snug">
+                <div>
+                  {c.name} 빅맥 <b>{mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원</b>
+                  <span className="text-amber-700"> · 한국 {BIGMAC.KRW.toLocaleString()}원보다 {Math.abs(mac.diff)}% {mac.diff < 0 ? "싸요" : "비싸요"}</span>
+                </div>
+                <div className="text-xs text-amber-700 tabular-nums">
+                  {amount > 0 ? `지금 금액이면 빅맥 ${macs < 10 ? macs.toFixed(1) : Math.floor(macs).toLocaleString()}개` : `현지 가격 ${mac.local.toLocaleString()} ${c.unit}`} · {BIGMAC.date} 빅맥지수
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="text-right text-zinc-400 px-5 h-7 text-lg tabular-nums">
             {calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""}

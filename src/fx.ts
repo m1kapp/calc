@@ -23,6 +23,23 @@ export const CURRENCIES: Currency[] = [
   { code: "INR", name: "인도", unit: "루피", flag: "🇮🇳", per: 1 },
 ];
 
+// 빅맥 현지 가격 — The Economist Big Mac index 2026-07-01 (MIT, github.com/TheEconomist/big-mac-data)
+// 같은 물건 하나로 그 나라 물가를 가늠한다. 반년마다 갱신된다 — 새 판이 나오면 숫자만 바꾼다.
+export const BIGMAC = {
+  date: "2026년 7월",
+  KRW: 5700,
+  local: { JPY: 500, VND: 76000, USD: 6.22, TWD: 78, THB: 135, HKD: 25.5, CNY: 26.5, PHP: 169, SGD: 7.45,
+    IDR: 43000, EUR: 6.19, GBP: 5.49, AUD: 8.5, CHF: 7.3, MYR: 14.55, MXN: 109, INR: 236.25 } as Record<string, number>,
+};
+
+// 그 나라 빅맥을 원화로 바꾼 값과 한국 대비 비율(-32 = 32% 싸다)
+export function bigmac(code: string, krwPer: number) {
+  const local = BIGMAC.local[code];
+  if (!local || !krwPer) return null;
+  const krw = local * krwPer;
+  return { local, krw, diff: Math.round((krw / BIGMAC.KRW - 1) * 100) };
+}
+
 export const findCurrency = (code: string) => CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0];
 
 // 원 기준 환율표 → "1 단위 = 몇 원". 하루 한 번 갱신되는 무료 공개 API(키 없음, CORS 허용).

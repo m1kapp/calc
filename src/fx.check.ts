@@ -1,6 +1,6 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
-import { EMPTY, korean, press, roughly, type Key } from "./fx.ts";
+import { bigmac, EMPTY, korean, press, roughly, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -21,5 +21,10 @@ assert.equal(roughly(193050), 200000);
 assert.equal(roughly(1183.3), 1200);
 assert.equal(roughly(59.2), 60);
 assert.equal(roughly(7.1), 8);
+
+const vn = bigmac("VND", 0.0513)!;
+assert.equal(Math.round(vn.krw), 3899);
+assert.equal(vn.diff, -32);
+assert.equal(bigmac("XXX", 1), null);
 
 console.log("fx ok");
