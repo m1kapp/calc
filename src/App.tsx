@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell, AppShellContent, AppShellHeader, Dialog, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
-import { CURRENCIES, EMPTY, fetchRates, findCurrency, formatInput, korean, press, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { AppShell, AppShellContent, AppShellHeader, Dialog, ShareButton, ToastProvider, useLocalStorage, useToast, Watermark, watermarkTint } from "@m1kapp/kit";
+import { CURRENCIES, EMPTY, fetchRates, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // npx m1kkit track https://calc.m1k.app 로 발급받은 slug (Vite라 env 대신 prop)
@@ -10,7 +10,9 @@ export default function App() {
   return (
     <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG}>
       <AppShell accent={ACCENT}>
-        <Calculator />
+        <ToastProvider>
+          <Calculator />
+        </ToastProvider>
       </AppShell>
     </Watermark>
   );
@@ -25,6 +27,7 @@ function Calculator() {
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState(false);
+  const toast = useToast();
 
   // 받은 지 12시간 안 됐으면 다시 안 받는다. 실패해도 지난 환율로 계속 쓴다.
   useEffect(() => {
@@ -41,9 +44,17 @@ function Calculator() {
   const top = krwFirst ? KRW : c, bottom = krwFirst ? c : KRW;
   const bigZeros = krwFirst || c.per === 100;
 
-  const key = (k: Key) => (k === "swap" ? swap() : setCalc((s) => press(s, k)));
+  const key = (k: Key) => (k === "burger" ? burger() : setCalc((s) => press(s, k)));
   const pick = (next: string) => { setCode(next); setPicking(false); };
   const swap = () => { setKrwFirst((v) => !v); setCalc({ ...EMPTY, cur: String(shown) }); };
+  // 🍔 만 원이 현지 돈으로 대략 얼마인지 한 번에 — 2024 버전부터 있던 버튼
+  const burger = () => {
+    if (!rate) return;
+    setKrwFirst(false);
+    setCalc({ ...EMPTY, cur: String(roughly(10000 / rate)) });
+    toast("만 원이 대략 얼마인지 기억해 두고, 즐거운 여행 되세요!");
+    petals();
+  };
 
   return (
     <>
@@ -79,6 +90,8 @@ function Calculator() {
           </div>
 
           <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong />
+          <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
+            className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
           <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
 
           <div className="text-right text-zinc-400 px-5 h-7 text-lg tabular-nums">
@@ -128,7 +141,7 @@ function Row({ cur, value, sub, strong }: { cur: { code: string; flag: string };
 
 function Keypad({ onKey, zeros, clearLabel }: { onKey: (k: Key) => void; zeros: string; clearLabel: string }) {
   const keys: [Key, string, "fn" | "num" | "op"][] = [
-    ["C", clearLabel, "fn"], ["back", "←", "fn"], ["swap", "⇅", "fn"], ["÷", "÷", "op"],
+    ["C", clearLabel, "fn"], ["burger", "🍔", "fn"], ["back", "←", "fn"], ["÷", "÷", "op"],
     ["7", "7", "num"], ["8", "8", "num"], ["9", "9", "num"], ["×", "×", "op"],
     ["4", "4", "num"], ["5", "5", "num"], ["6", "6", "num"], ["-", "−", "op"],
     ["1", "1", "num"], ["2", "2", "num"], ["3", "3", "num"], ["+", "+", "op"],
@@ -139,7 +152,7 @@ function Keypad({ onKey, zeros, clearLabel }: { onKey: (k: Key) => void; zeros: 
       {keys.map(([k, label, kind]) =>
         (
           <button key={k} onClick={() => onKey(k)}
-            aria-label={k === "swap" ? "원화와 외화 바꾸기" : k === "back" ? "지우기" : undefined}
+            aria-label={k === "burger" ? "만 원이면 얼마" : k === "back" ? "지우기" : undefined}
             className={`h-16 text-[26px] text-white active:scale-90 transition-transform ${kind === "fn" ? "bg-black" : ""}`}
             style={kind === "op" ? { background: ACCENT } : undefined}>
             {label}
@@ -170,4 +183,22 @@ function ManualRate({ open, cur, initial, onClose, onSave }: {
       </button>
     </Dialog>
   );
+}
+
+// 꽃잎 터뜨리기 — 4초 뒤 스스로 치운다. 움직임 줄이기 설정이면 안 한다.
+function petals() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#4dabf7", "#9775fa"];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement("div");
+    const size = 8 + Math.random() * 10;
+    Object.assign(p.style, {
+      position: "fixed", zIndex: "60", pointerEvents: "none", borderRadius: "50% 0",
+      left: `${Math.random() * 100}vw`, top: "-20px", width: `${size}px`, height: `${size}px`,
+      background: colors[i % colors.length],
+      animation: `petal ${2 + Math.random() * 2}s ease-in ${Math.random()}s forwards`,
+    });
+    document.body.append(p);
+    setTimeout(() => p.remove(), 4000);
+  }
 }
