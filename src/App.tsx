@@ -104,8 +104,8 @@ function Calculator() {
             {/* 설치할 수 있을 때만 보인다(설치됨·지원 안 함이면 사라짐). 인스타·카톡 안이면 바깥 브라우저로 여는 법 안내 */}
             <PWAInstallButton variant="chip" label="설치" appName="환율계산기" iconSrc="/icon-192.png" className={ICON_ONLY} />
             <button onClick={() => setViewing(true)} aria-label="최근 계산"
-              className="flex items-center justify-center h-8 px-2.5 rounded-xl bg-zinc-100 text-zinc-700 active:scale-95 transition-transform">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
+              className="flex items-center justify-center size-8 rounded-full text-zinc-500 hover:bg-zinc-100 active:bg-zinc-100 active:scale-95 transition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
             </button>
             <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" className={ICON_ONLY} />
           </div>
@@ -218,8 +218,8 @@ function Calculator() {
           )}
           <ul className="divide-y divide-zinc-100">
             {hist.map((h) => (
-              <li key={h.at}>
-                <button onClick={() => restore(h)} className="w-full flex items-center gap-3 py-3 text-left active:bg-zinc-50">
+              <li key={h.at} className="flex items-center">
+                <button onClick={() => restore(h)} className="min-w-0 flex-1 flex items-center gap-3 py-3 text-left active:bg-zinc-50">
                   <span className="text-2xl leading-none">{findCurrency(h.code).flag}</span>
                   <span className="min-w-0 flex-1 tabular-nums">
                     <span className="block truncate text-[15px] font-semibold text-zinc-900">{h.top}</span>
@@ -227,10 +227,14 @@ function Calculator() {
                   </span>
                   <span className="shrink-0 text-[11px] text-zinc-400">{ago(h.at)}</span>
                 </button>
+                <button onClick={() => setHist((all) => all.filter((x) => x.at !== h.at))} aria-label="이 기록 지우기"
+                  className="shrink-0 -mr-2 ml-1 p-2 rounded-full text-zinc-300 hover:text-zinc-500 active:bg-zinc-100">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
               </li>
             ))}
           </ul>
-          {hist.length > 0 && <button onClick={() => { setHist([]); setViewing(false); }} className="mt-2 w-full py-2.5 text-sm text-zinc-400">기록 지우기</button>}
+          {hist.length > 0 && <button onClick={() => { setHist([]); setViewing(false); }} className="mt-2 w-full py-2.5 text-sm text-zinc-400">모두 지우기</button>}
         </div>
       </InAppSheet>
 
