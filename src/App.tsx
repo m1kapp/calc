@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppShell, AppShellContent, AppShellHeader, InAppSheet, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
+import { AppShell, AppShellContent, AppShellHeader, InAppSheet, PWAInstallButton, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
 import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
@@ -82,11 +82,9 @@ function Calculator() {
             <span style={{ color: ACCENT }}>{c.name}<span className="max-[399px]:hidden"> 여행용</span></span> 환율계산기
           </h1>
           <div className="flex shrink-0 items-center gap-1.5">
-            <button onClick={() => setPicking(true)} aria-label="화폐 변경"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-700 active:scale-95 transition-transform">
-              <span className="text-base leading-none">{c.flag}</span>{c.code}
-            </button>
-            <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" install={{ appName: "환율계산기", iconSrc: "/icon-192.png" }} />
+            {/* 설치할 수 있을 때만 보인다(설치됨·지원 안 함이면 사라짐). 인스타·카톡 안이면 바깥 브라우저로 여는 법 안내 */}
+            <PWAInstallButton variant="chip" label="설치" appName="환율계산기" iconSrc="/icon-192.png" className={ICON_ONLY} />
+            <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" className={ICON_ONLY} />
           </div>
         </div>
       </AppShellHeader>
@@ -112,10 +110,17 @@ function Calculator() {
             </div>
           )}
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
-          <div className="flex items-center justify-end gap-2 px-4 pt-2 text-xs text-zinc-400 tabular-nums">
-            <span className="min-w-0 truncate">
+          <div className="flex items-center gap-2 px-4 pt-2 text-xs text-zinc-400 tabular-nums">
+            <button onClick={() => setPicking(true)} aria-label="화폐 변경"
+              className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-700 active:scale-95 transition-transform">
+              <span className="text-base leading-none">{c.flag}</span>{c.code}
+            </button>
+            <span className="ml-auto min-w-0 truncate text-right">
               <span className="font-semibold text-zinc-600">{c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"}원</span>
-              {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${new Date(cached.updatedAt).toLocaleDateString("ko-KR")} 기준` : error ? "환율을 못 받았어요" : "받는 중"}
+              {/* 아주 좁은 화면(SE)은 날짜를 빼고 환율만 */}
+              <span className={manual[code] || error || !cached ? "" : "max-[359px]:hidden"}>
+                {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${shortDate(cached.updatedAt)} 기준` : error ? "환율을 못 받았어요" : "받는 중"}
+              </span>
             </span>
             <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))}
               className="shrink-0 px-2 py-1 rounded-lg bg-zinc-100 text-zinc-600 font-medium">
@@ -200,6 +205,12 @@ const GREET: Record<string, string> = {
   IDR: "Selamat berlibur!", AUD: "Have a great trip!", CAD: "Bon voyage!", EUR: "Bon voyage!", GBP: "Have a lovely trip!",
   CHF: "Gute Reise!", INR: "शुभ यात्रा!", MXN: "¡Buen viaje!",
 };
+
+// 아주 좁은 화면(SE)에선 헤더 알약을 아이콘만 — 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
+const ICON_ONLY = "max-[359px]:text-[0px]! max-[359px]:gap-0! max-[359px]:px-2!";
+
+// "2026-10-25T…" → "'26.10.25"
+const shortDate = (iso: string) => { const d = new Date(iso); return `'${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; };
 
 const KRW = { code: "KRW", name: "한국", unit: "원", flag: "🇰🇷", per: 1 as const };
 
