@@ -174,7 +174,17 @@ export function press(s: Calc, key: Key): Calc {
 }
 
 // ["1000", "+", "500", "="] → "1,000 + 500 ="
-export const tapeText = (t: string[]) => t.map((x) => (/\d/.test(x) ? formatInput(x) : x === "-" ? "−" : x)).join(" ");
+// 왼쪽부터 계산하니 + − 뒤에 × ÷ 가 오면 앞을 괄호로 묶는다 — "9 + 3 × 3" 이 아니라 "(9 + 3) × 3"(=36) 으로 읽히게
+export function tapeText(t: string[]) {
+  let out = "", loose = false; // loose: 괄호 밖에 + − 가 남아 있다
+  for (const x of t) {
+    if (/\d/.test(x)) { out += formatInput(x); continue; }
+    if ((x === "×" || x === "÷") && loose) { out = `(${out})`; loose = false; }
+    if (x === "+" || x === "-") loose = true;
+    out += ` ${x === "-" ? "−" : x} `;
+  }
+  return out.trim();
+}
 
 export const formatInput = (cur: string) => {
   const [i, f] = cur.split(".");
