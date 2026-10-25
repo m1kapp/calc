@@ -21,6 +21,8 @@ function Calculator() {
   // 나라별 주소: /vnd · 예전 calcreator 의 /currency/vnd 도 받는다. 주소가 저장값보다 우선.
   const [fromUrl, setFromUrl] = useState(() => findCode(location.pathname.split("/").pop() ?? ""));
   const code = fromUrl ?? saved;
+  // 링크로 들어온 나라도 마지막 선택으로 기록한다 — 홈 화면 앱은 늘 / 로 열려서 저장값을 본다
+  useEffect(() => { if (fromUrl) setCode(fromUrl); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [manual, setManual] = useLocalStorage<Record<string, number>>("calc:manual", {});
   const [cached, setCached] = useLocalStorage<Rates | null>("calc:rates", null);
   const [mactab, setMactab] = useLocalStorage<(BigMac & { at: number }) | null>("calc:bigmac", null);
