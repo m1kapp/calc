@@ -2,10 +2,12 @@
 /* 키가 작은 화면(SE·가로 창) — 키패드가 다 보이게 위쪽을 줄인다.
    kit 이 런타임에 넣는 같은 이름 클래스(py-3·h-7)가 뒤에서 이겨서 short: 는 ! 를 붙여 쓴다 */
 @custom-variant short (@media (max-height: 620px));
-/* 키가 넉넉한 화면 — 남는 높이에 자주 쓰는 금액표를 보여 준다 */
-@custom-variant tall (@media (min-height: 700px));
-/* 그래도 남는 화면(데스크톱 액자·큰 폰) — 빈칸에 현지어 여행 인사를 옅게 */
-@custom-variant roomy (@media (min-height: 860px));
+
+/* 히어로 — 화면 높이 구간이 아니라 실제로 남은 칸 높이를 재서 맞춘다(글자 크기는 cqh).
+   96px 아래면 둘째 줄을 빼고 인사만, 36px 아래면 통째로 숨긴다 */
+.hero { container-type: size; }
+@container (max-height: 96px) { .hero-sub { display: none; } }
+@container (max-height: 36px) { .hero-in { display: none; } }
 
 html {
   font-family: "Pretendard Variable", "Pretendard", system-ui, -apple-system, sans-serif, "Tossface";
