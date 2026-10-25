@@ -96,7 +96,7 @@ function Calculator() {
                 {c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"} 원
               </div>
               <div className="text-[11px] text-zinc-400">
-                {manual[code] ? "직접 입력한 환율" : cached ? `${new Date(cached.updatedAt).toLocaleDateString("ko-KR")} 기준` : error ? "환율을 못 받았어요" : "환율 받는 중"}
+                {manual[code] ? "직접 입력한 환율" : cached ? `${error ? "오프라인 · " : ""}${new Date(cached.updatedAt).toLocaleDateString("ko-KR")} 기준` : error ? "환율을 못 받았어요" : "환율 받는 중"}
               </div>
             </div>
             <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))} className="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-600">

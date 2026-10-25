@@ -1,10 +1,10 @@
 {
   "name": "여행용 환율계산기",
-  "short_name": "여행용 환율계산기",
+  "short_name": "환율계산기",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#3b82f6",
-  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/icon-192.png",
