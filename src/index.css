@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* 키가 작은 화면(SE·가로 창) — 키패드가 다 보이게 위쪽을 줄인다.
+   kit 이 런타임에 넣는 같은 이름 클래스(py-3·h-7)가 뒤에서 이겨서 short: 는 ! 를 붙여 쓴다 */
+@custom-variant short (@media (max-height: 620px));
 
 html {
   font-family: "Pretendard Variable", "Pretendard", system-ui, -apple-system, sans-serif, "Tossface";

@@ -85,7 +85,7 @@ function Calculator() {
       </AppShellHeader>
       <AppShellContent>
         <div className="flex flex-col min-h-full">
-          <p className="text-center text-xs text-zinc-500 py-2 border-b border-zinc-100">
+          <p className="text-center text-xs text-zinc-500 py-2 border-b border-zinc-100 short:hidden!">
             광고 없음. 사칙연산하면서 바로 환율까지.
           </p>
 
@@ -106,12 +106,14 @@ function Calculator() {
             </button>
           </div>
 
+          {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다 */}
+          <div className="flex-[1_1_0px]" />
           <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong />
           <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
           <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
 
-          <div className="text-right text-zinc-400 px-5 h-7 text-lg tabular-nums">
+          <div className="text-right text-zinc-400 px-5 h-7 short:h-5! text-lg short:text-base! tabular-nums">
             {calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""}
           </div>
 
@@ -179,7 +181,7 @@ const KRW = { code: "KRW", name: "한국", unit: "원", flag: "🇰🇷", per: 1
 
 function Row({ cur, value, sub, strong }: { cur: { code: string; flag: string }; value: string; sub: string; strong?: boolean }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-100">
+    <div className="flex items-center gap-3 px-4 py-3 short:py-1.5! border-b border-zinc-100">
       <div className="flex flex-col items-center w-12 shrink-0">
         <span className="text-3xl leading-none">{cur.flag}</span>
         <span className="text-xs text-zinc-500 mt-1">{cur.code}</span>
@@ -200,13 +202,14 @@ function Keypad({ onKey, zeros, clearLabel }: { onKey: (k: Key) => void; zeros: 
     ["1", "1", "num"], ["2", "2", "num"], ["3", "3", "num"], ["+", "+", "op"],
     [".", ".", "num"], ["0", "0", "num"], [zeros, zeros, "num"], ["=", "=", "op"],
   ];
+  // 키패드가 높이를 먼저 가져간다(3:1) — 키 한 줄 48~88px. 낮은 화면에선 키가 줄고, 높은 화면에선 커지다 멈춘다
   return (
-    <div className="grid grid-cols-4 mt-auto bg-zinc-800 select-none">
+    <div className="grid grid-cols-4 grid-rows-5 flex-[3_1_240px] min-h-60 max-h-[440px] bg-zinc-800 select-none">
       {keys.map(([k, label, kind]) =>
         (
           <button key={k} onClick={() => onKey(k)}
             aria-label={k === "burger" ? "이 나라 물가 보기" : k === "back" ? "지우기" : undefined}
-            className={`h-16 text-[26px] text-white active:scale-90 transition-transform ${kind === "fn" ? "bg-black" : ""}`}
+            className={`text-[26px] text-white active:scale-90 transition-transform ${kind === "fn" ? "bg-black" : ""}`}
             style={kind === "op" ? { background: ACCENT } : undefined}>
             {label}
           </button>
