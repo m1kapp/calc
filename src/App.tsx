@@ -80,7 +80,7 @@ function Calculator() {
           <h1 className="text-lg font-black tracking-tight text-zinc-900">
             <span style={{ color: ACCENT }}>{c.name} 여행용</span> 환율계산기
           </h1>
-          <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" />
+          <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" install={{ appName: "환율계산기", iconSrc: "/icon-192.png" }} />
         </div>
       </AppShellHeader>
       <AppShellContent>
