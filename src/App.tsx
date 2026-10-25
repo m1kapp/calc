@@ -115,8 +115,8 @@ function Calculator() {
           {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다.
               빈칸은 히어로(현지어 여행 인사)가 채운다: 칸 높이(cqh)에 맞춰 글자가 커지고 작아지며, 낮으면 인사 한 줄만, 더 낮으면 숨는다(index.css .hero) */}
           <div className="hero flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
-            {/* 누르면 현지 발음으로 읽어 준다(브라우저 내장 음성 · 오프라인도 됨) */}
-            <button onClick={() => speak(GREET[code], LANG[code])} aria-label={`${GREET[code]} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
+            {/* 누르면 현지 발음으로 읽어 준다(public/greet/*.mp3) */}
+            <button onClick={() => greet(code)} aria-label={`${GREET[code]} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
               <div className="font-black leading-tight text-[clamp(16px,30cqh,44px)]" style={{ color: ACCENT, opacity: 0.32 }}>{GREET[code]}</div>
               <div className="hero-sub mt-[2cqh] text-[clamp(12px,7cqh,16px)] text-zinc-400">즐거운 {c.name} 여행 되세요 · 🔊</div>
             </button>
@@ -239,18 +239,23 @@ const GREET: Record<string, string> = {
   CHF: "Gute Reise!", INR: "शुभ यात्रा!", MXN: "¡Buen viaje!",
 };
 
-// 인사를 읽을 음성 언어 — CAD 는 Bon voyage 라 프랑스어(캐나다)
+// 인사 음성 — 브라우저 내장 음성은 기기마다 로봇 같거나 영어가 어색해서, 나라별 원어민 음성(Microsoft Edge 신경망)을 미리 구워 둔 mp3.
+// 못 받으면(오프라인 첫 실행 등) 내장 음성으로. CAD 는 Bon voyage 라 프랑스어(캐나다)
 const LANG: Record<string, string> = {
   JPY: "ja-JP", CNY: "zh-CN", VND: "vi-VN", THB: "th-TH", PHP: "fil-PH", TWD: "zh-TW", USD: "en-US", HKD: "zh-HK", SGD: "en-SG",
   MYR: "ms-MY", IDR: "id-ID", AUD: "en-AU", CAD: "fr-CA", EUR: "fr-FR", GBP: "en-GB", CHF: "de-CH", INR: "hi-IN", MXN: "es-MX",
 };
-const speak = (text: string, lang: string) => {
-  if (!("speechSynthesis" in window)) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang;
-  u.rate = 0.9;
-  speechSynthesis.cancel(); // 연타하면 겹치지 않고 처음부터
-  speechSynthesis.speak(u);
+let playing: HTMLAudioElement | null = null;
+const greet = (code: string) => {
+  playing?.pause(); // 연타하면 겹치지 않고 처음부터
+  playing = new Audio(`/greet/${code.toLowerCase()}.mp3`);
+  playing.play().catch(() => {
+    if (!("speechSynthesis" in window)) return;
+    const u = new SpeechSynthesisUtterance(GREET[code]);
+    u.lang = LANG[code];
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  });
 };
 
 // 최근 계산 한 줄 — 누르면 그 나라·그 금액으로 돌아간다. 이 기기에만 남는다
