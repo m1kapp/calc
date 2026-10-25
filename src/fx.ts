@@ -18,6 +18,7 @@ export const CURRENCIES: Currency[] = [
   { code: "MYR", name: "말레이시아", unit: "링깃", flag: "🇲🇾", per: 1 },
   { code: "IDR", name: "인도네시아", unit: "루피아", flag: "🇮🇩", per: 100 },
   { code: "AUD", name: "호주", unit: "달러", flag: "🇦🇺", per: 1 },
+  { code: "CAD", name: "캐나다", unit: "달러", flag: "🇨🇦", per: 1 },
   { code: "EUR", name: "유럽", unit: "유로", flag: "🇪🇺", per: 1 },
   { code: "GBP", name: "영국", unit: "파운드", flag: "🇬🇧", per: 1 },
   { code: "CHF", name: "스위스", unit: "프랑", flag: "🇨🇭", per: 1 },
@@ -33,7 +34,7 @@ export const BIGMAC: BigMac = {
   date: "2026-07-01",
   KRW: 5700,
   local: { JPY: 500, VND: 76000, USD: 6.22, TWD: 78, THB: 135, HKD: 25.5, CNY: 26.5, PHP: 169, SGD: 7.45,
-    IDR: 43000, EUR: 6.19, GBP: 5.49, AUD: 8.5, CHF: 7.3, MYR: 14.55, MXN: 109, INR: 236.25 },
+    IDR: 43000, EUR: 6.19, GBP: 5.49, AUD: 8.5, CAD: 8.17, CHF: 7.3, MYR: 14.55, MXN: 109, INR: 236.25 },
 };
 export const BIGMAC_CSV = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/source-data/big-mac-source-data-v2.csv";
 
@@ -72,11 +73,11 @@ export function bigmac(code: string, krwPer: number, t: BigMac = BIGMAC) {
 // ponytail: 2021 국제비교(ICP) 조사를 세계은행이 이어서 추정한 값이라 "대략"으로만 쓴다.
 export type Ppp = { year: string; KRW: number; local: Record<string, number> };
 const WB_ISO: Record<string, string> = { KRW: "KOR", JPY: "JPN", VND: "VNM", USD: "USA", THB: "THA", HKD: "HKG", CNY: "CHN",
-  PHP: "PHL", SGD: "SGP", IDR: "IDN", GBP: "GBR", AUD: "AUS", CHF: "CHE", MYR: "MYS", MXN: "MEX", INR: "IND" };
+  PHP: "PHL", SGD: "SGP", IDR: "IDN", GBP: "GBR", AUD: "AUS", CAD: "CAN", CHF: "CHE", MYR: "MYS", MXN: "MEX", INR: "IND" };
 export const PPP: Ppp = {
   year: "2025",
   KRW: 880.1254,
-  local: { AUD: 1.4646, CHF: 1.0655, CNY: 3.4596, GBP: 0.7015, HKD: 5.7676, IDR: 5065.969, INR: 19.8389, JPY: 103.3366,
+  local: { AUD: 1.4646, CAD: 1.2605, CHF: 1.0655, CNY: 3.4596, GBP: 0.7015, HKD: 5.7676, IDR: 5065.969, INR: 19.8389, JPY: 103.3366,
     MXN: 11.3088, MYR: 1.4306, PHP: 20.5335, SGD: 1.0238, THB: 10.6063, USD: 1, VND: 7203.3696 },
 };
 export function parsePpp(rows: { countryiso3code: string; date: string; value: number | null }[]): Ppp {
