@@ -133,19 +133,18 @@ function Calculator() {
           )}
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
           <div className="flex items-center gap-2 px-4 pt-2 text-xs text-zinc-400 tabular-nums">
-            <button onClick={() => setPicking(true)} aria-label="화폐 변경"
-              className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-700 active:scale-95 transition-transform">
-              <span className="text-base leading-none">{c.flag}</span>{c.code}
+            {/* 국기·코드는 바로 아래 줄에 있으니 여기선 "변경"만 — 양쪽 버튼을 같은 크기로 두고 환율은 가운데 */}
+            <button onClick={() => setPicking(true)} aria-label="화폐 변경" className={RATE_BTN}>
+              <span className="text-sm leading-none">🌏</span>변경
             </button>
-            <span className="ml-auto min-w-0 truncate text-right">
+            <span className="flex-1 min-w-0 truncate text-center">
               <span className="font-semibold text-zinc-600">{c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"}원</span>
               {/* 아주 좁은 화면(SE)은 날짜를 빼고 환율만 */}
               <span className={manual[code] || error || !cached ? "" : "max-[359px]:hidden"}>
                 {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${shortDate(cached.updatedAt)} 기준` : error ? "환율을 못 받았어요" : "받는 중"}
               </span>
             </span>
-            <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))}
-              className="shrink-0 px-2 py-1 rounded-lg bg-zinc-100 text-zinc-600 font-medium">
+            <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))} className={RATE_BTN}>
               {manual[code] ? "실시간" : "직접입력"}
             </button>
           </div>
@@ -258,6 +257,8 @@ const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60e3); retu
 
 // 400px 미만(아이폰 393 포함)에선 헤더 알약을 아이콘만 — 제목의 "여행용"을 지키려고. 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
 const ICON_ONLY = "max-[399px]:text-[0px]! max-[399px]:gap-0! max-[399px]:px-2.5! max-[399px]:h-8!";
+
+const RATE_BTN = "shrink-0 flex items-center justify-center gap-1 min-w-[4.25rem] h-7 px-2 rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600 active:scale-95 transition-transform";
 
 // "2026-10-25T…" → "'26.10.25"
 const shortDate = (iso: string) => { const d = new Date(iso); return `'${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; };
