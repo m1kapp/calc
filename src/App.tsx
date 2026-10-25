@@ -34,6 +34,8 @@ function Calculator() {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState(false);
   const [prices, setPrices] = useState(false);
+  const [hist, setHist] = useLocalStorage<Hist[]>("calc:history", []); // history 는 window.history 와 겹친다
+  const [viewing, setViewing] = useState(false);
 
   // 받은 지 12시간 안 됐으면 다시 안 받는다. 실패해도 지난 환율로 계속 쓴다.
   useEffect(() => {
@@ -70,7 +72,24 @@ function Calculator() {
   const macs = mac ? (krwFirst ? amount : shown) / mac.krw : 0; // 지금 금액이면 빅맥 몇 개
   const level = rate ? priceLevel(code, rate, pt) : null;
 
-  const key = (k: Key) => (k === "burger" ? setPrices(true) : setCalc((s) => press(s, k)));
+  // 최근 계산: = 를 누를 때, 또는 보던 숫자를 C 로 지울 때 남긴다 — 여행 중엔 금액만 치고 = 는 잘 안 누른다
+  const record = (s: Calc) => {
+    const n = +s.cur;
+    if (!n || !rate) return;
+    const other = roundFor(krwFirst ? n / rate : n * rate, !krwFirst || c.per === 100);
+    const [tu, bu] = krwFirst ? ["원", c.unit] : [c.unit, "원"];
+    const t = tapeText(s.tape);
+    const entry: Hist = { code, krwFirst, n, top: `${t ? t + " " : ""}${formatInput(s.cur)}${tu}`, bottom: bu === "원" ? won(other) : `${other.toLocaleString()}${bu}`, at: Date.now() };
+    setHist((h) => (h[0]?.top === entry.top && h[0]?.code === code ? h : [entry, ...h].slice(0, 30)));
+  };
+  const key = (k: Key) => {
+    if (k === "burger") return setPrices(true);
+    const next = press(calc, k);
+    if (k === "=" && next !== calc) record(next);
+    if (k === "C" && calc.tape[calc.tape.length - 1] !== "=") record(calc);
+    setCalc(next);
+  };
+  const restore = (h: Hist) => { pick(h.code); setKrwFirst(h.krwFirst); setCalc({ ...EMPTY, cur: String(h.n), fresh: true }); setViewing(false); };
   const pick = (next: string) => { setCode(next); setFromUrl(null); setPicking(false); };
   const swap = () => { setKrwFirst((v) => !v); setCalc({ ...EMPTY, cur: String(shown) }); };
 
@@ -119,9 +138,15 @@ function Calculator() {
               <span className="font-semibold text-zinc-600">{c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"}원</span>
               {/* 아주 좁은 화면(SE)은 날짜를 빼고 환율만 */}
               <span className={manual[code] || error || !cached ? "" : "max-[359px]:hidden"}>
-                {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${shortDate(cached.updatedAt)} 기준` : error ? "환율을 못 받았어요" : "받는 중"}
+                {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${shortDate(cached.updatedAt)}` : error ? "환율을 못 받았어요" : "받는 중"}
               </span>
             </span>
+            {hist.length > 0 && (
+              <button onClick={() => setViewing(true)} aria-label="최근 계산"
+                className="shrink-0 flex items-center justify-center size-7 rounded-lg bg-zinc-100 text-zinc-600">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
+              </button>
+            )}
             <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))}
               className="shrink-0 px-2 py-1 rounded-lg bg-zinc-100 text-zinc-600 font-medium">
               {manual[code] ? "실시간" : "직접입력"}
@@ -188,6 +213,26 @@ function Calculator() {
         </div>
       </InAppSheet>
 
+      <InAppSheet open={viewing} onClose={() => setViewing(false)} title="최근 계산">
+        <div className="px-5 pb-4">
+          <ul className="divide-y divide-zinc-100">
+            {hist.map((h) => (
+              <li key={h.at}>
+                <button onClick={() => restore(h)} className="w-full flex items-center gap-3 py-3 text-left active:bg-zinc-50">
+                  <span className="text-2xl leading-none">{findCurrency(h.code).flag}</span>
+                  <span className="min-w-0 flex-1 tabular-nums">
+                    <span className="block truncate text-[15px] font-semibold text-zinc-900">{h.top}</span>
+                    <span className="block truncate text-xs text-zinc-500">= {h.bottom}</span>
+                  </span>
+                  <span className="shrink-0 text-[11px] text-zinc-400">{ago(h.at)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button onClick={() => { setHist([]); setViewing(false); }} className="mt-2 w-full py-2.5 text-sm text-zinc-400">기록 지우기</button>
+        </div>
+      </InAppSheet>
+
       <ManualRate open={editing} cur={c} initial={rate} onClose={() => setEditing(false)}
         onSave={(v) => { setManual((m) => ({ ...m, [code]: v / c.per })); setEditing(false); }} />
     </>
@@ -205,6 +250,10 @@ const GREET: Record<string, string> = {
   IDR: "Selamat berlibur!", AUD: "Have a great trip!", CAD: "Bon voyage!", EUR: "Bon voyage!", GBP: "Have a lovely trip!",
   CHF: "Gute Reise!", INR: "शुभ यात्रा!", MXN: "¡Buen viaje!",
 };
+
+// 최근 계산 한 줄 — 누르면 그 나라·그 금액으로 돌아간다. 이 기기에만 남는다
+type Hist = { code: string; krwFirst: boolean; n: number; top: string; bottom: string; at: number };
+const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60e3); return m < 1 ? "방금" : m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`; };
 
 // 아주 좁은 화면(SE)에선 헤더 알약을 아이콘만 — 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
 const ICON_ONLY = "max-[359px]:text-[0px]! max-[359px]:gap-0! max-[359px]:px-2!";
