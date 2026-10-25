@@ -116,14 +116,12 @@ function Calculator() {
               {manual[code] ? "실시간" : "직접입력"}
             </button>
           </div>
-          <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong />
+          <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong
+            expr={calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""} />
           <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
           <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
 
-          <div className="text-right text-zinc-400 px-5 h-7 short:h-5! text-lg short:text-base! tabular-nums">
-            {calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""}
-          </div>
 
           <Keypad onKey={key} zeros={bigZeros ? "000" : "00"} clearLabel={calc.acc !== null && calc.cur === "0" ? "AC" : "C"} />
         </div>
@@ -191,7 +189,8 @@ const won = (n: number) => `${korean(n) || Math.round(n).toLocaleString()}원`;
 
 const KRW = { code: "KRW", name: "한국", unit: "원", flag: "🇰🇷", per: 1 as const };
 
-function Row({ cur, value, sub, strong }: { cur: { code: string; flag: string }; value: string; sub: string; strong?: boolean }) {
+// expr: 계산 중인 식(1,000 +) — 폰 계산기처럼 큰 숫자 바로 위에. 키패드 위에 따로 띄우면 좁은 띠가 생겼다
+function Row({ cur, value, sub, strong, expr }: { cur: { code: string; flag: string }; value: string; sub: string; strong?: boolean; expr?: string }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3 short:py-1.5! border-b border-zinc-100">
       <div className="flex flex-col items-center w-12 shrink-0">
@@ -199,6 +198,7 @@ function Row({ cur, value, sub, strong }: { cur: { code: string; flag: string };
         <span className="text-xs text-zinc-500 mt-1">{cur.code}</span>
       </div>
       <div className="flex-1 min-w-0 text-right">
+        {expr !== undefined && <div className="h-5 truncate text-sm text-zinc-400 tabular-nums">{expr}</div>}
         <div className={`truncate tabular-nums text-[clamp(30px,calc(6.5dvh-8px),52px)] font-bold leading-tight ${strong ? "text-zinc-900" : "text-zinc-400"}`}>{value}</div>
         <div className="h-4 text-xs text-zinc-500 tabular-nums">{sub}</div>
       </div>
