@@ -1,4 +1,4 @@
-// scripts/iphone.mjs 가 만든 파일 — 손으로 고치지 말고 다시 돌린다. 애플 공식 스토어 가격, 미국은 세금 별도
+// scripts/iphone.mjs 가 만든 파일 — 손으로 고치지 말고 다시 돌린다. 애플 공식 스토어 가격, 미국·캐나다는 세금 별도
 export const IPHONE = {
   "date": "2026-10-25",
   "model": "아이폰 18 Pro",

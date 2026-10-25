@@ -5,7 +5,7 @@
 import fs from "node:fs";
 
 const [slug = "iphone-18-pro", name = "아이폰 18 Pro"] = process.argv.slice(2);
-// 통화 → 애플 스토어 경로. 유로는 프랑스 판(나라마다 조금씩 다르다), 미국은 세금 별도 가격이다
+// 통화 → 애플 스토어 경로. 유로는 프랑스 판(나라마다 조금씩 다르다), 미국·캐나다는 세금 별도 가격이다
 const STORE = { KRW: "kr", JPY: "jp", CNY: "cn", VND: "vn", THB: "th", PHP: "ph", TWD: "tw", USD: "", HKD: "hk", SGD: "sg",
   MYR: "my", IDR: "id", AUD: "au", CAD: "ca", EUR: "fr", GBP: "uk", CHF: "ch-de", INR: "in", MXN: "mx" };
 
@@ -24,5 +24,5 @@ for (const [cur, cc] of Object.entries(STORE)) {
 if (!out.KRW) throw new Error("한국 가격을 못 받았어요");
 // .ts 로 쓴다 — JSON import 는 vite·tsc·node 검사 설정이 저마다 달라서
 fs.writeFileSync(new URL("../src/iphone.ts", import.meta.url),
-  `// scripts/iphone.mjs 가 만든 파일 — 손으로 고치지 말고 다시 돌린다. 애플 공식 스토어 가격, 미국은 세금 별도\nexport const IPHONE = ${JSON.stringify(out, null, 2)};\n`);
+  `// scripts/iphone.mjs 가 만든 파일 — 손으로 고치지 말고 다시 돌린다. 애플 공식 스토어 가격, 미국·캐나다는 세금 별도\nexport const IPHONE = ${JSON.stringify(out, null, 2)};\n`);
 console.log(`→ src/iphone.ts (${Object.keys(out.local).length}개국)`);

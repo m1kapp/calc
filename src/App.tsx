@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, InAppSheet, PWAInstallButton, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, IPHONE, iphone, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, IPHONE, iphone, rankBy, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -35,6 +35,7 @@ function Calculator() {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState(false);
   const [prices, setPrices] = useState(false);
+  const [ranking, setRanking] = useState<"mac" | "phone" | "level" | null>(null); // 물가 시트에서 "전체 순위"
   const [hist, setHist] = useLocalStorage<Hist[]>("calc:history", []); // history 는 window.history 와 겹친다
   const [viewing, setViewing] = useState(false);
 
@@ -188,21 +189,53 @@ function Calculator() {
                 {mac && <>
                   <Line label="빅맥 한 개" left={`${mt.KRW.toLocaleString()}원`}
                     right={`${mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원`}
-                    sub={`${mac.local.toLocaleString()}${c.unit}`} diff={mac.diff} />
+                    sub={`${mac.local.toLocaleString()}${c.unit}`} diff={mac.diff} onMore={() => setRanking("mac")} />
                 </>}
                 {phone && <Line label={IPHONE.model} left={won(IPHONE.KRW)} right={won(Math.round(phone.krw / 1e4) * 1e4)}
-                  sub={`${phone.local.toLocaleString()}${c.unit}`} diff={phone.diff} />}
-                {level && <Line label="전체 물가" left="100" right={String(level)} diff={level - 100} bars={[100, level]} />}
+                  sub={`${phone.local.toLocaleString()}${c.unit}`} diff={phone.diff} onMore={() => setRanking("phone")} />}
+                {level && <Line label="전체 물가" left="100" right={String(level)} diff={level - 100} bars={[100, level]} onMore={() => setRanking("level")} />}
               </div>
               {!mac && !phone && !level && <p className="mt-3 text-sm text-zinc-500">이 나라는 아직 물가 자료가 없어요.</p>}
               <p className="mt-4 text-[11px] leading-relaxed text-zinc-400">
                 {mac && <>빅맥 · 이코노미스트 빅맥지수 {monthLabel(mt.date)}<br /></>}
-                {phone && <>아이폰 · 애플 공식 스토어 가장 싼 용량 {monthLabel(IPHONE.date)}{code === "USD" ? " · 미국은 세금 별도" : ""}<br /></>}
+                {phone && <>아이폰 · 애플 공식 스토어 가장 싼 용량 {monthLabel(IPHONE.date)}{code === "USD" || code === "CAD" ? " · 세금 별도 가격" : ""}<br /></>}
                 {level && <>전체 물가 · 세계은행 가계소비 물가 {pt.year}년 · 오늘 환율로 계산한 대략값</>}
               </p>
             </>
           )}
         </div>
+      </InAppSheet>
+
+      {/* 물가 한 줄의 전체 순위 — 오늘 환율로 원화(물가는 지수)로 맞춰 싼 나라부터. 누르면 그 나라로 */}
+      <InAppSheet open={!!ranking} onClose={() => setRanking(null)}
+        title={ranking === "mac" ? "빅맥 한 개 · 싼 나라 순" : ranking === "phone" ? `${IPHONE.model} · 싼 나라 순` : "전체 물가 · 싼 나라 순"}>
+        <ol className="px-5 pb-4">
+          {ranking && cached && rankBy((k) => {
+            const r = cached.krwPer[k];
+            if (ranking === "mac") return bigmac(k, r, mt)?.krw ?? null;
+            if (ranking === "phone") return iphone(k, r, IPHONE)?.krw ?? null;
+            return priceLevel(k, r, pt);
+          }, ranking === "mac" ? mt.KRW : ranking === "phone" ? IPHONE.KRW : 100).map((row, i) => {
+            const cur = row.code === "KRW" ? KRW : findCurrency(row.code);
+            const base = ranking === "mac" ? mt.KRW : ranking === "phone" ? IPHONE.KRW : 100;
+            const diff = Math.round((row.v / base - 1) * 100);
+            return (
+              <li key={row.code}>
+                <button disabled={row.code === "KRW"} onClick={() => { pick(row.code); setRanking(null); setPrices(false); }}
+                  className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-xl text-left tabular-nums enabled:active:bg-zinc-100 ${row.code === code ? "bg-blue-50" : row.code === "KRW" ? "bg-zinc-50" : ""}`}>
+                  <span className="w-5 text-right text-xs font-semibold text-zinc-400">{i + 1}</span>
+                  <span className="emoji text-xl leading-none">{cur.flag}</span>
+                  <span className={`flex-1 text-[15px] ${row.code === code ? "font-bold" : "font-medium"} text-zinc-800`}>{cur.name}</span>
+                  <span className="text-[15px] font-semibold text-zinc-900">{ranking === "level" ? row.v : ranking === "phone" ? won(Math.round(row.v / 1e4) * 1e4) : won(row.v)}</span>
+                  <span className={`w-14 text-right text-[11px] font-semibold ${row.code === "KRW" || diff === 0 ? "text-zinc-400" : diff < 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    {row.code === "KRW" ? "기준" : diff === 0 ? "같음" : `${Math.abs(diff)}% ${diff < 0 ? "↓" : "↑"}`}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        {ranking === "phone" && <p className="px-5 pb-4 -mt-2 text-[11px] text-zinc-400">애플 공식 스토어 가장 싼 용량 · 미국·캐나다는 세금 별도 · 오늘 환율</p>}
       </InAppSheet>
 
       <InAppSheet open={viewing} onClose={() => setViewing(false)} title="최근 계산">
@@ -378,8 +411,8 @@ function Side({ flag, name, accent }: { flag: string; name: string; accent?: boo
 }
 
 // 한 줄 = 라벨 | 한국 | 그 나라. diff 는 한국 대비 % (음수면 싸다)
-function Line({ label, left, right, sub, diff, bars }: {
-  label: string; left: string; right: string; sub?: string; diff?: number; bars?: [number, number];
+function Line({ label, left, right, sub, diff, bars, onMore }: {
+  label: string; left: string; right: string; sub?: string; diff?: number; bars?: [number, number]; onMore?: () => void;
 }) {
   const max = bars ? Math.max(...bars) : 0;
   const bar = (v: number, accent?: boolean) => bars && (
@@ -390,7 +423,10 @@ function Line({ label, left, right, sub, diff, bars }: {
   return (
     <>
       <span className="col-span-3 border-t border-zinc-100" />
-      <span className="pt-[17px] pb-3 text-left text-xs font-semibold text-zinc-500">{label}</span>
+      <span className="pt-[17px] pb-3 text-left text-xs font-semibold text-zinc-500">
+        {label}
+        {onMore && <button onClick={onMore} className="mt-1.5 block text-[11px] font-semibold" style={{ color: ACCENT }}>전체 순위 ›</button>}
+      </span>
       <div className="py-3 tabular-nums">
         <div className="text-[17px] font-semibold text-zinc-700">{left}</div>
         {bars && bar(bars[0])}

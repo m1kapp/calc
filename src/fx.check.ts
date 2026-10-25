@@ -1,7 +1,7 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { tapeText, bigmac, iphone, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, type Key } from "./fx.ts";
+import { tapeText, bigmac, iphone, rankBy, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -60,3 +60,6 @@ assert.equal(findCode(""), null);
 assert.equal(findCode("index.html"), null);
 
 console.log("fx ok");
+
+// 전체 순위: 값이 없는 나라는 빠지고, 한국을 끼워 싼 순으로
+assert.deepEqual(rankBy((c) => ({ JPY: 3, USD: 1 } as Record<string, number>)[c] ?? null, 2).map((r) => r.code), ["USD", "KRW", "JPY"]);

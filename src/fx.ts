@@ -111,6 +111,14 @@ export function priceLevel(code: string, krwPer: number, t: Ppp = PPP) {
   return local && krwPer ? Math.round((local * krwPer / t.KRW) * 100) : null;
 }
 
+// 전체 순위 — 나라마다 같은 기준의 값(원화·물가지수)을 매겨 싼 나라부터. 한국도 끼워 넣어 어디쯤인지 보인다
+export type Rank = { code: string; v: number };
+export function rankBy(value: (code: string) => number | null, korea: number): Rank[] {
+  const rows: Rank[] = [{ code: "KRW", v: korea }];
+  for (const c of CURRENCIES) { const v = value(c.code); if (v != null) rows.push({ code: c.code, v }); }
+  return rows.sort((a, b) => a.v - b.v);
+}
+
 // "vnd" → "VND", 모르는 코드는 null
 export const findCode = (s: string) => CURRENCIES.find((c) => c.code === s.toUpperCase())?.code ?? null;
 export const findCurrency = (code: string) => CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0];
