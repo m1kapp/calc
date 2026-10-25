@@ -138,9 +138,10 @@ export const roughly = (n: number) => {
 };
 
 // 폰 계산기처럼 왼쪽부터 차례로 계산한다(1 + 2 × 3 = 9).
+// tape: 지나온 식(["1000", "+", "500", "×"]) — 큰 숫자 위에 "1,000 + 500 ×" 로 쭉 보여 준다. = 뒤 새 숫자면 비운다
 export type Op = "+" | "-" | "×" | "÷";
-export type Calc = { cur: string; acc: number | null; op: Op | null; fresh: boolean };
-export const EMPTY: Calc = { cur: "0", acc: null, op: null, fresh: false };
+export type Calc = { cur: string; acc: number | null; op: Op | null; fresh: boolean; tape: string[] };
+export const EMPTY: Calc = { cur: "0", acc: null, op: null, fresh: false, tape: [] };
 
 const apply = (a: number, op: Op, b: number) =>
   op === "+" ? a + b : op === "-" ? a - b : op === "×" ? a * b : b === 0 ? 0 : a / b;
@@ -152,22 +153,28 @@ export function press(s: Calc, key: Key): Calc {
   if (key === "back") return s.fresh ? s : { ...s, cur: s.cur.length > 1 ? s.cur.slice(0, -1) : "0" };
   if (key === "=") {
     if (s.acc === null || !s.op) return s;
-    return { cur: show(apply(s.acc, s.op, +s.cur)), acc: null, op: null, fresh: true };
+    return { cur: show(apply(s.acc, s.op, +s.cur)), acc: null, op: null, fresh: true, tape: [...s.tape, s.cur, "="] };
   }
   if (key === "+" || key === "-" || key === "×" || key === "÷") {
     if (s.acc !== null && s.op && !s.fresh) {
       const v = apply(s.acc, s.op, +s.cur);
-      return { cur: show(v), acc: v, op: key, fresh: true };
+      return { cur: show(v), acc: v, op: key, fresh: true, tape: [...s.tape, s.cur, key] };
     }
-    return { ...s, acc: +s.cur, op: key, fresh: true };
+    // 연산자를 연달아 누르면 마지막 연산자만 바꾼다. = 뒤라면 결과에서 새 식을 시작한다
+    const tape = s.op && s.fresh ? [...s.tape.slice(0, -1), key] : [...(s.tape[s.tape.length - 1] === "=" ? [] : s.tape), s.cur, key];
+    return { ...s, acc: +s.cur, op: key, fresh: true, tape };
   }
   // 숫자 · 00 · 000 · 소수점
   const base = s.fresh ? "0" : s.cur;
-  if (key === ".") return base.includes(".") ? { ...s, fresh: false } : { ...s, cur: base + ".", fresh: false };
+  const tape = s.fresh && !s.op ? [] : s.tape;
+  if (key === ".") return base.includes(".") ? { ...s, fresh: false, tape } : { ...s, cur: base + ".", fresh: false, tape };
   const next = base === "0" ? String(+key) : base + key;
   if (next.replace(".", "").length > 12) return s;
-  return { ...s, cur: next, fresh: false };
+  return { ...s, cur: next, fresh: false, tape };
 }
+
+// ["1000", "+", "500", "="] → "1,000 + 500 ="
+export const tapeText = (t: string[]) => t.map((x) => (/\d/.test(x) ? formatInput(x) : x === "-" ? "−" : x)).join(" ");
 
 export const formatInput = (cur: string) => {
   const [i, f] = cur.split(".");

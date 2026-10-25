@@ -1,7 +1,7 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { bigmac, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, roughly, type Key } from "./fx.ts";
+import { tapeText, bigmac, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, roughly, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -17,6 +17,14 @@ assert.equal(run("9", "+", "1", "=", "7"), "7"); // = 뒤 숫자는 새로 시�
 assert.equal(run("1", ".", ".", "5"), "1.5");
 assert.equal(run("1", "2", "back"), "1");
 assert.equal(run("7", "÷", "0", "="), "0");
+
+const tape = (...keys: Key[]) => tapeText(keys.reduce(press, EMPTY).tape);
+assert.equal(tape("1", "000", "+", "5", "0", "0", "×", "2"), "1,000 + 500 ×");
+assert.equal(tape("1", "000", "+", "5", "0", "0", "×", "2", "="), "1,000 + 500 × 2 =");
+assert.equal(tape("9", "+", "×"), "9 ×"); // 연산자 바꾸기
+assert.equal(tape("9", "+", "1", "=", "-", "3"), "10 −"); // = 뒤 연산자는 결과에서 새 식
+assert.equal(tape("9", "+", "1", "=", "7"), ""); // = 뒤 숫자는 새로 시작
+assert.equal(run("1", "000", "+", "5", "0", "0", "×", "2", "="), "3000");
 
 assert.equal(roughly(193050), 200000);
 assert.equal(roughly(1183.3), 1200);

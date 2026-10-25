@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, InAppSheet, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -122,7 +122,7 @@ function Calculator() {
             </button>
           </div>
           <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong
-            expr={calc.acc !== null && calc.op ? `${formatInput(String(calc.acc))} ${calc.op}` : ""} />
+            expr={tapeText(calc.tape)} />
           <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
           <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
@@ -211,7 +211,8 @@ function Row({ cur, value, sub, strong, expr }: { cur: { code: string; flag: str
         <span className="text-xs text-zinc-500 mt-1">{cur.code}</span>
       </div>
       <div className="flex-1 min-w-0 text-right">
-        {expr !== undefined && <div className="h-5 truncate text-sm text-zinc-400 tabular-nums">{expr}</div>}
+        {/* 길어지면 앞쪽이 잘리고 최근 식이 보인다 */}
+        {expr !== undefined && <div className="h-5 flex justify-end overflow-hidden whitespace-nowrap text-sm text-zinc-400 tabular-nums">{expr}</div>}
         <div className={`truncate tabular-nums text-[clamp(30px,calc(6.5dvh-8px),52px)] font-bold leading-tight ${strong ? "text-zinc-900" : "text-zinc-400"}`}>{value}</div>
         <div className="h-4 text-xs text-zinc-500 tabular-nums">{sub}</div>
       </div>
