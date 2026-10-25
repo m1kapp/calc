@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppShell, AppShellContent, AppShellHeader, Dialog, InAppSheet, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
+import { AppShell, AppShellContent, AppShellHeader, InAppSheet, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
 import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
@@ -221,19 +221,21 @@ function ManualRate({ open, cur, initial, onClose, onSave }: {
   const [v, setV] = useState("");
   useEffect(() => { if (open) setV(initial ? String(Math.round(initial * cur.per * 100) / 100) : ""); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Dialog open={open} onClose={onClose} title="환전한 환율 넣기">
-      <p className="text-sm text-zinc-500 mb-3">환전소에서 받은 환율로 계산해요. 이 기기에만 저장돼요.</p>
-      <label className="flex items-center gap-2 text-sm">
-        <span className="shrink-0">{cur.per} {cur.code} =</span>
-        <input id="manual-rate" inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)}
-          className="flex-1 min-w-0 border rounded-lg px-3 py-2 text-right tabular-nums" />
-        <span>원</span>
-      </label>
-      <button disabled={!(+v > 0)} onClick={() => onSave(+v)}
-        className="w-full mt-4 py-2.5 rounded-xl text-white font-semibold disabled:opacity-40" style={{ background: ACCENT }}>
-        이 환율로 계산
-      </button>
-    </Dialog>
+    <InAppSheet open={open} onClose={onClose} title="환전한 환율 넣기">
+      <div className="px-5 pb-5">
+        <p className="text-sm text-zinc-500 mb-4">환전소에서 받은 환율로 계산해요. 이 기기에만 저장돼요.</p>
+        <label className="flex items-center gap-2 rounded-2xl bg-zinc-100/70 px-4 py-3 text-sm text-zinc-600">
+          <span className="shrink-0 font-semibold">{cur.per} {cur.code} =</span>
+          <input id="manual-rate" inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)}
+            className="flex-1 min-w-0 bg-transparent text-right text-xl font-bold text-zinc-900 tabular-nums outline-none" />
+          <span>원</span>
+        </label>
+        <button disabled={!(+v > 0)} onClick={() => onSave(+v)}
+          className="w-full mt-3 py-3 rounded-2xl text-white font-semibold disabled:opacity-40 active:scale-[0.98] transition-transform" style={{ background: ACCENT }}>
+          이 환율로 계산
+        </button>
+      </div>
+    </InAppSheet>
   );
 }
 
