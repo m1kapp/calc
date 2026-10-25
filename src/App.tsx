@@ -76,38 +76,34 @@ function Calculator() {
   return (
     <>
       <AppShellHeader>
-        <div className="flex items-center justify-between w-full">
-          <h1 className="text-lg font-black tracking-tight text-zinc-900">
-            <span style={{ color: ACCENT }}>{c.name} 여행용</span> 환율계산기
+        <div className="flex items-center justify-between w-full gap-2">
+          <h1 className="min-w-0 truncate text-lg max-[359px]:text-base font-black tracking-tight text-zinc-900">
+            <span style={{ color: ACCENT }}>{c.name}<span className="max-[399px]:hidden"> 여행용</span></span> 환율계산기
           </h1>
-          <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" install={{ appName: "환율계산기", iconSrc: "/icon-192.png" }} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button onClick={() => setPicking(true)} aria-label="화폐 변경"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-700 active:scale-95 transition-transform">
+              <span className="text-base leading-none">{c.flag}</span>{c.code}
+            </button>
+            <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" install={{ appName: "환율계산기", iconSrc: "/icon-192.png" }} />
+          </div>
         </div>
       </AppShellHeader>
       <AppShellContent>
         <div className="flex flex-col min-h-full">
-          <p className="text-center text-xs text-zinc-500 py-2 border-b border-zinc-100 short:hidden!">
-            광고 없음. 사칙연산하면서 바로 환율까지.
-          </p>
-
-          <div className="flex items-center justify-center gap-2 py-3 text-sm">
-            <button onClick={() => setPicking(true)} className="px-2.5 py-1 rounded-lg border font-medium" style={{ borderColor: ACCENT, color: ACCENT }}>
-              {c.flag} 화폐변경
-            </button>
-            <div className="text-center leading-tight">
-              <div className="font-semibold tabular-nums">
-                {c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"} 원
-              </div>
-              <div className="text-[11px] text-zinc-400">
-                {manual[code] ? "직접 입력한 환율" : cached ? `${error ? "오프라인 · " : ""}${new Date(cached.updatedAt).toLocaleDateString("ko-KR")} 기준` : error ? "환율을 못 받았어요" : "환율 받는 중"}
-              </div>
-            </div>
-            <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))} className="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-600">
+          {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다 */}
+          <div className="flex-[1_1_0px]" />
+          {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
+          <div className="flex items-center justify-end gap-2 px-4 pt-2 text-xs text-zinc-400 tabular-nums">
+            <span className="min-w-0 truncate">
+              <span className="font-semibold text-zinc-600">{c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"}원</span>
+              {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${new Date(cached.updatedAt).toLocaleDateString("ko-KR")} 기준` : error ? "환율을 못 받았어요" : "받는 중"}
+            </span>
+            <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))}
+              className="shrink-0 px-2 py-1 rounded-lg bg-zinc-100 text-zinc-600 font-medium">
               {manual[code] ? "실시간" : "직접입력"}
             </button>
           </div>
-
-          {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다 */}
-          <div className="flex-[1_1_0px]" />
           <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong />
           <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
