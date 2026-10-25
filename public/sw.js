@@ -4,7 +4,8 @@
 // JS·CSS·폰트·이미지: 저장본을 바로 주고 뒤에서 새로 받아 둔다. API(fetch) 요청은 건드리지 않는다.
 // ponytail: 캐시 이름이 하나라 배포마다 옛 해시 파일이 조금씩 쌓인다 — 커지면 savePage 에서 안 쓰는 것 정리
 const CACHE = "m1kkit-pwa";
-const ASSET = ["script", "style", "font", "image", "manifest"];
+// manifest 는 저장본을 주지 않는다 — 이름·아이콘을 바꾼 첫 방문에 옛 manifest 로 홈 화면에 추가되던 문제(설치된 앱은 이미 갖고 있어 오프라인 손해 없음)
+const ASSET = ["script", "style", "font", "image"];
 
 // SPA 호스팅(Vercel rewrites 등)은 없는 파일에도 index.html 을 200 으로 준다.
 // 그걸 JS 자리에 담으면 다음 오프라인 실행이 하얗게 뜬다 — 페이지가 아닌데 HTML 이면 안 담는다.
