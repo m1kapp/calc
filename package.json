@@ -10,7 +10,7 @@
     "check": "node --experimental-strip-types src/fx.check.ts"
   },
   "dependencies": {
-    "@m1kapp/kit": "^0.0.53",
+    "@m1kapp/kit": "^0.0.54",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

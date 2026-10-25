@@ -98,7 +98,7 @@ function Calculator() {
       <AppShellHeader className="bg-white!">
         <div className="flex items-center justify-between w-full gap-2">
           <h1 className="min-w-0 truncate text-lg max-[359px]:text-base font-black tracking-tight text-zinc-900">
-            <span style={{ color: ACCENT }}>{c.name}<span className="max-[399px]:hidden"> 여행용</span></span> 환율계산기
+            <span style={{ color: ACCENT }}>{c.name} 여행용</span> 환율계산기
           </h1>
           <div className="flex shrink-0 items-center gap-1.5">
             {/* 설치할 수 있을 때만 보인다(설치됨·지원 안 함이면 사라짐). 인스타·카톡 안이면 바깥 브라우저로 여는 법 안내 */}
@@ -260,8 +260,8 @@ const GREET: Record<string, string> = {
 type Hist = { code: string; krwFirst: boolean; n: number; top: string; bottom: string; at: number };
 const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60e3); return m < 1 ? "방금" : m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`; };
 
-// 아주 좁은 화면(SE)에선 헤더 알약을 아이콘만 — 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
-const ICON_ONLY = "max-[359px]:text-[0px]! max-[359px]:gap-0! max-[359px]:px-2.5! max-[359px]:h-8!";
+// 400px 미만(아이폰 393 포함)에선 헤더 알약을 아이콘만 — 제목의 "여행용"을 지키려고. 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
+const ICON_ONLY = "max-[399px]:text-[0px]! max-[399px]:gap-0! max-[399px]:px-2.5! max-[399px]:h-8!";
 
 // "2026-10-25T…" → "'26.10.25"
 const shortDate = (iso: string) => { const d = new Date(iso); return `'${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; };
