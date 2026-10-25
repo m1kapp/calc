@@ -93,6 +93,18 @@ function Calculator() {
         <div className="flex flex-col min-h-full">
           {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다 */}
           <div className="flex-[1_1_0px]" />
+          {/* 남는 높이를 빈칸으로 두지 않고 자주 쓰는 금액표로 — 누르면 그 금액이 바로 들어간다. 낮은 화면에선 숨김 */}
+          {rate && (
+            <div className="hidden tall:grid! grid-cols-3 gap-2 px-4 pb-2">
+              {quick(rate).map((n) => (
+                <button key={n} onClick={() => { setKrwFirst(false); setCalc({ ...EMPTY, cur: String(n), fresh: true }); }}
+                  className="rounded-2xl bg-zinc-100/70 py-2.5 text-center tabular-nums active:scale-95 transition-transform">
+                  <div className="text-sm font-bold text-zinc-800">{n.toLocaleString()}{c.unit}</div>
+                  <div className="text-[11px] text-zinc-500">{won(n * rate)}</div>
+                </button>
+              ))}
+            </div>
+          )}
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
           <div className="flex items-center justify-end gap-2 px-4 pt-2 text-xs text-zinc-400 tabular-nums">
             <span className="min-w-0 truncate">
@@ -173,6 +185,10 @@ function Calculator() {
   );
 }
 
+// 자주 쓰는 금액: 3만 원어치 안쪽의 10의 거듭제곱부터 ×1 ×5 ×10 (1,000엔 · 10만 동 · 10달러 · 100바트)
+const quick = (rate: number) => { const b = 10 ** Math.floor(Math.log10(30000 / rate)); return [b, 5 * b, 10 * b]; };
+const won = (n: number) => `${korean(n) || Math.round(n).toLocaleString()}원`;
+
 const KRW = { code: "KRW", name: "한국", unit: "원", flag: "🇰🇷", per: 1 as const };
 
 function Row({ cur, value, sub, strong }: { cur: { code: string; flag: string }; value: string; sub: string; strong?: boolean }) {
@@ -183,7 +199,7 @@ function Row({ cur, value, sub, strong }: { cur: { code: string; flag: string };
         <span className="text-xs text-zinc-500 mt-1">{cur.code}</span>
       </div>
       <div className="flex-1 min-w-0 text-right">
-        <div className={`truncate tabular-nums text-[34px] font-bold leading-tight ${strong ? "text-zinc-900" : "text-zinc-400"}`}>{value}</div>
+        <div className={`truncate tabular-nums text-[clamp(30px,calc(6.5dvh-8px),52px)] font-bold leading-tight ${strong ? "text-zinc-900" : "text-zinc-400"}`}>{value}</div>
         <div className="h-4 text-xs text-zinc-500 tabular-nums">{sub}</div>
       </div>
     </div>

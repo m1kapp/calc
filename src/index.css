@@ -2,6 +2,8 @@
 /* 키가 작은 화면(SE·가로 창) — 키패드가 다 보이게 위쪽을 줄인다.
    kit 이 런타임에 넣는 같은 이름 클래스(py-3·h-7)가 뒤에서 이겨서 short: 는 ! 를 붙여 쓴다 */
 @custom-variant short (@media (max-height: 620px));
+/* 키가 넉넉한 화면 — 남는 높이에 자주 쓰는 금액표를 보여 준다 */
+@custom-variant tall (@media (min-height: 700px));
 
 html {
   font-family: "Pretendard Variable", "Pretendard", system-ui, -apple-system, sans-serif, "Tossface";
