@@ -131,12 +131,6 @@ export function korean(n: number): string {
 // 원화는 원 단위, 외화는 소수 둘째 자리까지
 export const roundFor = (n: number, isKrw: boolean) => (isKrw ? Math.round(n) : Math.round(n * 100) / 100);
 
-// 대충 기억하기 좋은 숫자로 올림: 앞 두 자리만 남긴다 (1,949 → 2,000 · 193,050 → 200,000 · 59.2 → 60)
-export const roughly = (n: number) => {
-  const tens = 10 ** Math.max(0, String(Math.floor(n)).length - 2);
-  return Math.ceil(n / tens) * tens;
-};
-
 // 폰 계산기처럼 왼쪽부터 차례로 계산한다(1 + 2 × 3 = 9).
 // tape: 지나온 식(["1000", "+", "500", "×"]) — 큰 숫자 위에 "1,000 + 500 ×" 로 쭉 보여 준다. = 뒤 새 숫자면 비운다
 export type Op = "+" | "-" | "×" | "÷";

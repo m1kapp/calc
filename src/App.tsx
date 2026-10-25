@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, InAppSheet, PWAInstallButton, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roughly, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -69,7 +69,6 @@ function Calculator() {
   const top = krwFirst ? KRW : c, bottom = krwFirst ? c : KRW;
   const bigZeros = krwFirst || c.per === 100;
   const mac = rate ? bigmac(code, rate, mt) : null;
-  const macs = mac ? (krwFirst ? amount : shown) / mac.krw : 0; // 지금 금액이면 빅맥 몇 개
   const level = rate ? priceLevel(code, rate, pt) : null;
 
   // 최근 계산: = 를 누를 때, 또는 보던 숫자를 C 로 지울 때 남긴다 — 여행 중엔 금액만 치고 = 는 잘 안 누른다
@@ -191,13 +190,10 @@ function Calculator() {
                 <Side flag="🇰🇷" name="한국" />
                 <Side flag={c.flag} name={c.name} accent />
 
-                <Line label="만 원" left="10,000원" right={`약 ${roughly(10000 / rate).toLocaleString()}${c.unit}`} />
                 {mac && <>
                   <Line label="빅맥 한 개" left={`${mt.KRW.toLocaleString()}원`}
                     right={`${mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원`}
                     sub={`${mac.local.toLocaleString()}${c.unit}`} diff={mac.diff} />
-                  <Line label="만 원으로 빅맥" left={`${(10000 / mt.KRW).toFixed(1)}개`} right={`${(10000 / mac.krw).toFixed(1)}개`} />
-                  {amount > 0 && <Line label="지금 금액 빅맥" left={`${count((krwFirst ? amount : shown) / mt.KRW)}개`} right={`${count(macs)}개`} />}
                 </>}
                 {level && <Line label="전체 물가" left="100" right={String(level)} diff={level - 100} bars={[100, level]} />}
               </div>
@@ -335,7 +331,6 @@ function ManualRate({ open, cur, initial, onClose, onSave }: {
   );
 }
 
-const count = (n: number) => (n < 10 ? n.toFixed(1) : Math.floor(n).toLocaleString());
 
 function Side({ flag, name, accent }: { flag: string; name: string; accent?: boolean }) {
   return (

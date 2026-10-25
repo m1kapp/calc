@@ -1,7 +1,7 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { tapeText, bigmac, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, roughly, type Key } from "./fx.ts";
+import { tapeText, bigmac, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -29,10 +29,6 @@ assert.equal(tape("9", "+", "1", "=", "-", "3"), "10 −"); // = 뒤 연산자�
 assert.equal(tape("9", "+", "1", "=", "7"), ""); // = 뒤 숫자는 새로 시작
 assert.equal(run("1", "000", "+", "5", "0", "0", "×", "2", "="), "3000");
 
-assert.equal(roughly(193050), 200000);
-assert.equal(roughly(1183.3), 1200);
-assert.equal(roughly(59.2), 60);
-assert.equal(roughly(7.1), 8);
 
 const vn = bigmac("VND", 0.0513)!;
 assert.equal(Math.round(vn.krw), 3899);
