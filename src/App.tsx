@@ -92,7 +92,12 @@ function Calculator() {
       <AppShellContent>
         <div className="flex flex-col min-h-full">
           {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다 */}
-          <div className="flex-[1_1_0px]" />
+          <div className="flex-[1_1_0px] min-h-0 flex flex-col items-center justify-center overflow-hidden select-none" aria-hidden="true">
+            <div className="hidden roomy:block! text-center">
+              <div className="text-[28px] font-black leading-tight" style={{ color: ACCENT, opacity: 0.18 }}>{GREET[code]}</div>
+              <div className="mt-1 text-sm text-zinc-300">즐거운 {c.name} 여행 되세요</div>
+            </div>
+          </div>
           {/* 남는 높이를 빈칸으로 두지 않고 자주 쓰는 금액표로 — 누르면 그 금액이 바로 들어간다. 낮은 화면에선 숨김 */}
           {rate && (
             <div className="hidden tall:grid! grid-cols-3 gap-2 px-4 pb-2">
@@ -186,6 +191,14 @@ function Calculator() {
 // 자주 쓰는 금액: 3만 원어치 안쪽의 10의 거듭제곱부터 ×1 ×5 ×10 (1,000엔 · 10만 동 · 10달러 · 100바트)
 const quick = (rate: number) => { const b = 10 ** Math.floor(Math.log10(30000 / rate)); return [b, 5 * b, 10 * b]; };
 const won = (n: number) => `${korean(n) || Math.round(n).toLocaleString()}원`;
+
+// 빈칸이 넉넉할 때만 뜨는 현지어 여행 인사
+const GREET: Record<string, string> = {
+  JPY: "楽しい旅を!", CNY: "旅途愉快!", VND: "Chúc chuyến đi vui vẻ!", THB: "เที่ยวให้สนุกนะ!", PHP: "Ingat sa biyahe!",
+  TWD: "旅途愉快!", USD: "Have a great trip!", HKD: "玩得開心!", SGD: "Have a great trip!", MYR: "Selamat bercuti!",
+  IDR: "Selamat berlibur!", AUD: "Have a great trip!", CAD: "Bon voyage!", EUR: "Bon voyage!", GBP: "Have a lovely trip!",
+  CHF: "Gute Reise!", INR: "शुभ यात्रा!", MXN: "¡Buen viaje!",
+};
 
 const KRW = { code: "KRW", name: "한국", unit: "원", flag: "🇰🇷", per: 1 as const };
 
