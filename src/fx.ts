@@ -3,24 +3,26 @@
 export type Currency = { code: string; name: string; unit: string; flag: string; per: 1 | 100 };
 
 // per: 화면에 "100 VND = 5원"처럼 몇 단위 기준으로 보여 줄지. 단위가 작은 통화는 100.
+// 순서: 2026년 9월 한국인 출국자 많은 나라 순(법무부 출발·도착지별 출입국자, 여행신문 2026-10-23 보도 — 일본·중국·베트남·태국·필리핀).
+// 대만부터는 기사에 없는 나라라 2025년 방문객 규모로 대략 이었다. 화면 아래에도 같은 출처를 적는다.
 export const CURRENCIES: Currency[] = [
   { code: "JPY", name: "일본", unit: "엔", flag: "🇯🇵", per: 100 },
-  { code: "VND", name: "베트남", unit: "동", flag: "🇻🇳", per: 100 },
-  { code: "USD", name: "미국", unit: "달러", flag: "🇺🇸", per: 1 },
-  { code: "TWD", name: "대만", unit: "달러", flag: "🇹🇼", per: 1 },
-  { code: "THB", name: "태국", unit: "바트", flag: "🇹🇭", per: 1 },
-  { code: "HKD", name: "홍콩", unit: "달러", flag: "🇭🇰", per: 1 },
   { code: "CNY", name: "중국", unit: "위안", flag: "🇨🇳", per: 1 },
+  { code: "VND", name: "베트남", unit: "동", flag: "🇻🇳", per: 100 },
+  { code: "THB", name: "태국", unit: "바트", flag: "🇹🇭", per: 1 },
   { code: "PHP", name: "필리핀", unit: "페소", flag: "🇵🇭", per: 1 },
+  { code: "TWD", name: "대만", unit: "달러", flag: "🇹🇼", per: 1 },
+  { code: "USD", name: "미국", unit: "달러", flag: "🇺🇸", per: 1 },
+  { code: "HKD", name: "홍콩", unit: "달러", flag: "🇭🇰", per: 1 },
   { code: "SGD", name: "싱가포르", unit: "달러", flag: "🇸🇬", per: 1 },
+  { code: "MYR", name: "말레이시아", unit: "링깃", flag: "🇲🇾", per: 1 },
   { code: "IDR", name: "인도네시아", unit: "루피아", flag: "🇮🇩", per: 100 },
+  { code: "AUD", name: "호주", unit: "달러", flag: "🇦🇺", per: 1 },
   { code: "EUR", name: "유럽", unit: "유로", flag: "🇪🇺", per: 1 },
   { code: "GBP", name: "영국", unit: "파운드", flag: "🇬🇧", per: 1 },
-  { code: "AUD", name: "호주", unit: "달러", flag: "🇦🇺", per: 1 },
   { code: "CHF", name: "스위스", unit: "프랑", flag: "🇨🇭", per: 1 },
-  { code: "MYR", name: "말레이시아", unit: "링깃", flag: "🇲🇾", per: 1 },
-  { code: "MXN", name: "멕시코", unit: "페소", flag: "🇲🇽", per: 1 },
   { code: "INR", name: "인도", unit: "루피", flag: "🇮🇳", per: 1 },
+  { code: "MXN", name: "멕시코", unit: "페소", flag: "🇲🇽", per: 1 },
 ];
 
 // 빅맥 현지 가격 — The Economist Big Mac index (MIT, github.com/TheEconomist/big-mac-data)

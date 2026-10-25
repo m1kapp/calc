@@ -131,6 +131,11 @@ function Calculator() {
             </button>
           ))}
         </div>
+        <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-400">
+          한국인이 많이 가는 순 · 2026년 9월 법무부 출국 통계 참고
+          <br />
+          (대만부터는 2025년 방문객 규모로 대략)
+        </p>
       </Dialog>
 
       <InAppSheet open={prices} onClose={() => setPrices(false)} title={`한국 vs ${c.name} 물가`}>
