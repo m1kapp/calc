@@ -103,6 +103,10 @@ function Calculator() {
           <div className="flex shrink-0 items-center gap-1.5">
             {/* 설치할 수 있을 때만 보인다(설치됨·지원 안 함이면 사라짐). 인스타·카톡 안이면 바깥 브라우저로 여는 법 안내 */}
             <PWAInstallButton variant="chip" label="설치" appName="환율계산기" iconSrc="/icon-192.png" className={ICON_ONLY} />
+            <button onClick={() => setViewing(true)} aria-label="최근 계산"
+              className="flex items-center justify-center h-8 px-2.5 rounded-xl bg-zinc-100 text-zinc-700 active:scale-95 transition-transform">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
+            </button>
             <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" className={ICON_ONLY} />
           </div>
         </div>
@@ -138,15 +142,9 @@ function Calculator() {
               <span className="font-semibold text-zinc-600">{c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"}원</span>
               {/* 아주 좁은 화면(SE)은 날짜를 빼고 환율만 */}
               <span className={manual[code] || error || !cached ? "" : "max-[359px]:hidden"}>
-                {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${shortDate(cached.updatedAt)}` : error ? "환율을 못 받았어요" : "받는 중"}
+                {" · "}{manual[code] ? "직접 입력" : cached ? `${error ? "오프라인 · " : ""}${shortDate(cached.updatedAt)} 기준` : error ? "환율을 못 받았어요" : "받는 중"}
               </span>
             </span>
-            {hist.length > 0 && (
-              <button onClick={() => setViewing(true)} aria-label="최근 계산"
-                className="shrink-0 flex items-center justify-center size-7 rounded-lg bg-zinc-100 text-zinc-600">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
-              </button>
-            )}
             <button onClick={() => (manual[code] ? setManual(({ [code]: _, ...rest }) => rest) : setEditing(true))}
               className="shrink-0 px-2 py-1 rounded-lg bg-zinc-100 text-zinc-600 font-medium">
               {manual[code] ? "실시간" : "직접입력"}
@@ -215,6 +213,9 @@ function Calculator() {
 
       <InAppSheet open={viewing} onClose={() => setViewing(false)} title="최근 계산">
         <div className="px-5 pb-4">
+          {hist.length === 0 && (
+            <p className="py-6 text-center text-sm leading-relaxed text-zinc-400">아직 기록이 없어요<br />= 를 누르거나, 금액을 보고 C 로 지우면 남아요</p>
+          )}
           <ul className="divide-y divide-zinc-100">
             {hist.map((h) => (
               <li key={h.at}>
@@ -229,7 +230,7 @@ function Calculator() {
               </li>
             ))}
           </ul>
-          <button onClick={() => { setHist([]); setViewing(false); }} className="mt-2 w-full py-2.5 text-sm text-zinc-400">기록 지우기</button>
+          {hist.length > 0 && <button onClick={() => { setHist([]); setViewing(false); }} className="mt-2 w-full py-2.5 text-sm text-zinc-400">기록 지우기</button>}
         </div>
       </InAppSheet>
 
@@ -256,7 +257,7 @@ type Hist = { code: string; krwFirst: boolean; n: number; top: string; bottom: s
 const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60e3); return m < 1 ? "방금" : m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`; };
 
 // 아주 좁은 화면(SE)에선 헤더 알약을 아이콘만 — 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
-const ICON_ONLY = "max-[359px]:text-[0px]! max-[359px]:gap-0! max-[359px]:px-2!";
+const ICON_ONLY = "max-[359px]:text-[0px]! max-[359px]:gap-0! max-[359px]:px-2.5! max-[359px]:h-8!";
 
 // "2026-10-25T…" → "'26.10.25"
 const shortDate = (iso: string) => { const d = new Date(iso); return `'${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; };
