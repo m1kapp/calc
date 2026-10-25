@@ -67,6 +67,15 @@ export function bigmac(code: string, krwPer: number, t: BigMac = BIGMAC) {
   return { local, krw, diff: Math.round((krw / t.KRW - 1) * 100) };
 }
 
+// 아이폰 — 여행 가서 실제로 사 오는 물건이라 나라별 공식 가격을 비교한다(src/iphone.ts, scripts/iphone.mjs 로 갱신)
+export { IPHONE } from "./iphone.ts";
+export function iphone(code: string, krwPer: number, t: { KRW: number; local: Record<string, number> }) {
+  const local = t.local[code];
+  if (!local || !krwPer) return null;
+  const krw = local * krwPer;
+  return { local, krw, diff: Math.round((krw / t.KRW - 1) * 100) };
+}
+
 // 물가 수준 — 세계은행 가계소비 PPP 환산계수(PA.NUS.PRVT.PP, 현지 통화 / 국제달러).
 // 오늘 환율과 나누면 "같은 장바구니가 한국의 몇 %"가 된다. 매년 갱신 — 화면은 API 를 직접 받고, 아래는 2025년 사본.
 // 대만(세계은행 비회원)과 유로존(최신값 비어 있음)은 없다.

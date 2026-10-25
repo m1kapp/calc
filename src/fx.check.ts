@@ -1,7 +1,7 @@
 // npm run check — 계산기·만단위 표기가 깨지면 여기서 멈춘다.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { tapeText, bigmac, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, type Key } from "./fx.ts";
+import { tapeText, bigmac, iphone, findCode, BIGMAC, EMPTY, monthLabel, parseBigmac, parsePpp, priceLevel, korean, press, type Key } from "./fx.ts";
 
 const run = (...keys: Key[]) => keys.reduce(press, EMPTY).cur;
 
@@ -34,6 +34,10 @@ const vn = bigmac("VND", 0.0513)!;
 assert.equal(Math.round(vn.krw), 3899);
 assert.equal(vn.diff, -32);
 assert.equal(bigmac("XXX", 1), null);
+
+// 아이폰: 홍콩 10,499달러 × 169원 = 177만 원 → 한국 199만 원보다 11% 싸다. 공식 스토어가 없는 나라는 null
+assert.equal(iphone("HKD", 169, { KRW: 1990000, local: { HKD: 10499 } })!.diff, -11);
+assert.equal(iphone("IDR", 0.09, { KRW: 1990000, local: {} }), null);
 
 // 내려받은 원본 CSV 를 넣으면 들고 있는 사본과 같은 값이 나와야 한다(npm run check 전에 받아 둔다)
 const csv = process.env.BIGMAC_CSV && readFileSync(process.env.BIGMAC_CSV, "utf8");

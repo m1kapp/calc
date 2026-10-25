@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, InAppSheet, PWAInstallButton, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
-import { BIGMAC, bigmac, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { BIGMAC, bigmac, IPHONE, iphone, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -70,6 +70,7 @@ function Calculator() {
   const top = krwFirst ? KRW : c, bottom = krwFirst ? c : KRW;
   const bigZeros = krwFirst || c.per === 100;
   const mac = rate ? bigmac(code, rate, mt) : null;
+  const phone = rate ? iphone(code, rate, IPHONE) : null;
   const level = rate ? priceLevel(code, rate, pt) : null;
 
   // 최근 계산: = 를 누를 때, 또는 보던 숫자를 C 로 지울 때 남긴다 — 여행 중엔 금액만 치고 = 는 잘 안 누른다
@@ -189,11 +190,14 @@ function Calculator() {
                     right={`${mac.krw.toLocaleString(undefined, { maximumFractionDigits: 0 })}원`}
                     sub={`${mac.local.toLocaleString()}${c.unit}`} diff={mac.diff} />
                 </>}
+                {phone && <Line label={IPHONE.model} left={won(IPHONE.KRW)} right={won(Math.round(phone.krw / 1e4) * 1e4)}
+                  sub={`${phone.local.toLocaleString()}${c.unit}`} diff={phone.diff} />}
                 {level && <Line label="전체 물가" left="100" right={String(level)} diff={level - 100} bars={[100, level]} />}
               </div>
-              {!mac && !level && <p className="mt-3 text-sm text-zinc-500">이 나라는 아직 물가 자료가 없어요.</p>}
+              {!mac && !phone && !level && <p className="mt-3 text-sm text-zinc-500">이 나라는 아직 물가 자료가 없어요.</p>}
               <p className="mt-4 text-[11px] leading-relaxed text-zinc-400">
                 {mac && <>빅맥 · 이코노미스트 빅맥지수 {monthLabel(mt.date)}<br /></>}
+                {phone && <>아이폰 · 애플 공식 스토어 가장 싼 용량 {monthLabel(IPHONE.date)}{code === "USD" ? " · 미국은 세금 별도" : ""}<br /></>}
                 {level && <>전체 물가 · 세계은행 가계소비 물가 {pt.year}년 · 오늘 환율로 계산한 대략값</>}
               </p>
             </>
