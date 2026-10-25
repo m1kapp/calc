@@ -119,7 +119,8 @@ function Calculator() {
         </div>
       </AppShellContent>
 
-      <Dialog open={picking} onClose={() => setPicking(false)} title="어디로 가세요">
+      <InAppSheet open={picking} onClose={() => setPicking(false)} title="어디로 가세요">
+        <div className="px-5 pb-4">
         <div className="grid grid-cols-3 gap-2">
           {CURRENCIES.map((x) => (
             <button key={x.code} onClick={() => pick(x.code)}
@@ -136,7 +137,8 @@ function Calculator() {
           <br />
           (대만부터는 2025년 방문객 규모로 대략)
         </p>
-      </Dialog>
+        </div>
+      </InAppSheet>
 
       <InAppSheet open={prices} onClose={() => setPrices(false)} title={`한국 vs ${c.name} 물가`}>
         <div className="px-5 pb-4">
