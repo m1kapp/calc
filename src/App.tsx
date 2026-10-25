@@ -29,6 +29,7 @@ function Calculator() {
   const [mactab, setMactab] = useLocalStorage<(BigMac & { at: number }) | null>("calc:bigmac", null);
   const [ppptab, setPpptab] = useLocalStorage<(Ppp & { at: number }) | null>("calc:ppp", null);
   const [calc, setCalc] = useState<Calc>(EMPTY);
+  const [fill, setFill] = useState<{ n: number; dur: number } | null>(null); // 인사 읽는 중 색 채우기
   const [krwFirst, setKrwFirst] = useState(false); // 위 칸에 원화를 넣고 외화를 본다
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -116,16 +117,20 @@ function Calculator() {
               빈칸은 히어로(현지어 여행 인사)가 채운다: 칸 높이(cqh)에 맞춰 글자가 커지고 작아지며, 낮으면 인사 한 줄만, 더 낮으면 숨는다(index.css .hero) */}
           <div className="hero flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
             {/* 누르면 현지 발음으로 읽어 준다(public/greet/*.mp3) */}
-            <button onClick={() => greet(code)} aria-label={`${GREET[code]} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
-              <div className="font-black leading-tight whitespace-nowrap" style={{ color: ACCENT, opacity: 0.32, fontSize: fit(GREET[code], 30, 16, 44) }}>{GREET[code]}</div>
-              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${SAY[code]} · 즐거운 여행 🔊`, 12, 11, 15) }}>{SAY[code]} · 즐거운 여행 🔊</div>
+            <button onClick={() => greet(code, (dur) => setFill({ n: Date.now(), dur }))} aria-label={`${GREET[code]} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
+              {/* 읽는 동안 왼쪽부터 색이 차오른다 — 옅은 글자 위에 진한 글자를 겹치고 잘린 폭을 늘린다 */}
+              <div className="relative font-black leading-tight whitespace-nowrap" style={{ fontSize: fit(GREET[code], 30, 16, 44) }}>
+                <span style={{ color: ACCENT, opacity: 0.32 }}>{GREET[code]}</span>
+                {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{GREET[code]}</span>}
+              </div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${SAY[code]} · 즐거운 여행 🔊`, 12, 11, 15) }}>{SAY[code]} · 즐거운 여행 <span className="emoji">🔊</span></div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
           <div className="flex items-center gap-2 px-4 pt-2 text-xs text-zinc-400 tabular-nums">
             {/* 국기·코드는 바로 아래 줄에 있으니 여기선 "변경"만 — 양쪽 버튼을 같은 크기로 두고 환율은 가운데 */}
             <button onClick={() => setPicking(true)} aria-label="화폐 변경" className={RATE_BTN}>
-              <span className="text-sm leading-none">🌏</span>변경
+              <span className="emoji text-sm leading-none">🌏</span>변경
             </button>
             <span className="flex-1 min-w-0 truncate text-center">
               <span className="font-semibold text-zinc-600">{c.per} {c.code} = {rate ? (rate * c.per).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "…"}원</span>
@@ -139,10 +144,10 @@ function Calculator() {
             </button>
           </div>
           <Row cur={top} value={formatInput(calc.cur)} sub={korean(amount)} strong
-            expr={tapeText(calc.tape)} />
+            expr={tapeText(calc.tape)} onFlag={() => setPicking(true)} />
           <button onClick={swap} aria-label="원화와 외화 위아래 바꾸기"
             className="self-center -my-4 z-10 size-8 rounded-full bg-white border border-zinc-200 shadow-sm text-zinc-500 active:scale-90 transition-transform">⇅</button>
-          <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} />
+          <Row cur={bottom} value={shown.toLocaleString()} sub={korean(shown)} onFlag={() => setPicking(true)} />
 
 
           <Keypad onKey={key} zeros={bigZeros ? "000" : "00"} clearLabel={calc.acc !== null && calc.cur === "0" ? "AC" : "C"} />
@@ -156,7 +161,7 @@ function Calculator() {
             <button key={x.code} onClick={() => pick(x.code)}
               className="flex flex-col items-center gap-0.5 py-3 rounded-2xl bg-zinc-100/70 text-xs text-zinc-800 active:scale-95 transition-transform"
               style={x.code === code ? { background: ACCENT, color: "white" } : undefined}>
-              <span className="text-2xl">{x.flag}</span>
+              <span className="emoji text-2xl">{x.flag}</span>
               <span className="font-semibold">{x.name}</span>
               <span className="opacity-60">{x.code} · {x.unit}</span>
             </button>
@@ -205,7 +210,7 @@ function Calculator() {
             {hist.map((h) => (
               <li key={h.at} className="flex items-center">
                 <button onClick={() => restore(h)} className="min-w-0 flex-1 flex items-center gap-3 py-3 text-left active:bg-zinc-50">
-                  <span className="text-2xl leading-none">{findCurrency(h.code).flag}</span>
+                  <span className="emoji text-2xl leading-none">{findCurrency(h.code).flag}</span>
                   <span className="min-w-0 flex-1 tabular-nums">
                     <span className="block truncate text-[15px] font-semibold text-zinc-900">{h.top}</span>
                     <span className="block truncate text-xs text-zinc-500">= {h.bottom}</span>
@@ -261,13 +266,16 @@ const LANG: Record<string, string> = {
   MYR: "ms-MY", IDR: "id-ID", AUD: "en-AU", CAD: "fr-CA", EUR: "fr-FR", GBP: "en-GB", CHF: "de-CH", INR: "hi-IN", MXN: "es-MX",
 };
 let playing: HTMLAudioElement | null = null;
-const greet = (code: string) => {
+// onStart(초): 소리가 실제로 나기 시작할 때 길이를 알려 준다 — 색 채우기를 소리에 맞춘다
+const greet = (code: string, onStart: (dur: number) => void) => {
   playing?.pause(); // 연타하면 겹치지 않고 처음부터
-  playing = new Audio(`/greet/${code.toLowerCase()}.mp3`);
-  playing.play().catch(() => {
+  const a = (playing = new Audio(`/greet/${code.toLowerCase()}.mp3`));
+  a.onplaying = () => onStart(Number.isFinite(a.duration) ? a.duration : 1.8);
+  a.play().catch(() => {
     if (!("speechSynthesis" in window)) return;
     const u = new SpeechSynthesisUtterance(GREET[code]);
     u.lang = LANG[code];
+    u.onstart = () => onStart(1.8);
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   });
@@ -286,13 +294,16 @@ const shortDate = (iso: string) => { const d = new Date(iso); return `'${String(
 const KRW = { code: "KRW", name: "한국", unit: "원", flag: "🇰🇷", per: 1 as const };
 
 // expr: 계산 중인 식(1,000 +) — 폰 계산기처럼 큰 숫자 바로 위에. 키패드 위에 따로 띄우면 좁은 띠가 생겼다
-function Row({ cur, value, sub, strong, expr }: { cur: { code: string; flag: string }; value: string; sub: string; strong?: boolean; expr?: string }) {
+function Row({ cur, value, sub, strong, expr, onFlag }: { cur: { code: string; flag: string }; value: string; sub: string; strong?: boolean; expr?: string; onFlag?: () => void }) {
+  // 외화 국기를 누르면 나라 바꾸기(원화 국기는 바꿀 게 없다)
+  const pickable = onFlag && cur.code !== "KRW";
   return (
     <div className="flex items-center gap-3 px-4 py-3 short:py-1.5! border-b border-zinc-100">
-      <div className="flex flex-col items-center w-12 shrink-0">
-        <span className="text-3xl leading-none">{cur.flag}</span>
+      <button onClick={pickable ? onFlag : undefined} disabled={!pickable} aria-label={pickable ? "화폐 변경" : undefined}
+        className="flex flex-col items-center w-12 shrink-0 enabled:active:scale-95 transition-transform">
+        <span className="emoji text-3xl leading-none">{cur.flag}</span>
         <span className="text-xs text-zinc-500 mt-1">{cur.code}</span>
-      </div>
+      </button>
       <div className="flex-1 min-w-0 text-right">
         {/* 길어지면 앞쪽이 잘리고 최근 식이 보인다 */}
         {expr !== undefined && <div className="h-5 flex justify-end overflow-hidden whitespace-nowrap text-sm text-zinc-400 tabular-nums">{expr}</div>}
@@ -320,7 +331,7 @@ function Keypad({ onKey, zeros, clearLabel }: { onKey: (k: Key) => void; zeros: 
             aria-label={k === "burger" ? "이 나라 물가 보기" : k === "back" ? "지우기" : undefined}
             className={`text-[26px] text-white active:scale-90 transition-transform ${kind === "fn" ? "bg-black" : ""}`}
             style={kind === "op" ? { background: ACCENT } : undefined}>
-            {label}
+            {k === "burger" ? <span className="emoji">{label}</span> : label}
           </button>
         ),
       )}
@@ -356,7 +367,7 @@ function ManualRate({ open, cur, initial, onClose, onSave }: {
 function Side({ flag, name, accent }: { flag: string; name: string; accent?: boolean }) {
   return (
     <div className="flex flex-col items-center pb-2">
-      <span className="text-3xl leading-none">{flag}</span>
+      <span className="emoji text-3xl leading-none">{flag}</span>
       <span className="mt-1 text-sm font-bold" style={accent ? { color: ACCENT } : undefined}>{name}</span>
     </div>
   );
