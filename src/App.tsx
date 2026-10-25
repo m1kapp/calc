@@ -117,8 +117,8 @@ function Calculator() {
           <div className="hero flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
             {/* 누르면 현지 발음으로 읽어 준다(public/greet/*.mp3) */}
             <button onClick={() => greet(code)} aria-label={`${GREET[code]} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
-              <div className="font-black leading-tight text-[clamp(16px,30cqh,44px)]" style={{ color: ACCENT, opacity: 0.32 }}>{GREET[code]}</div>
-              <div className="hero-sub mt-[2cqh] text-[clamp(12px,7cqh,16px)] text-zinc-400">즐거운 {c.name} 여행 되세요 · 🔊</div>
+              <div className="font-black leading-tight whitespace-nowrap" style={{ color: ACCENT, opacity: 0.32, fontSize: fit(GREET[code], 30, 16, 44) }}>{GREET[code]}</div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${SAY[code]} · 즐거운 여행 🔊`, 12, 11, 15) }}>{SAY[code]} · 즐거운 여행 🔊</div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
@@ -237,6 +237,21 @@ const GREET: Record<string, string> = {
   TWD: "旅途愉快!", USD: "Have a great trip!", HKD: "玩得開心!", SGD: "Have a great trip!", MYR: "Selamat bercuti!",
   IDR: "Selamat berlibur!", AUD: "Have a great trip!", CAD: "Bon voyage!", EUR: "Bon voyage!", GBP: "Have a lovely trip!",
   CHF: "Gute Reise!", INR: "शुभ यात्रा!", MXN: "¡Buen viaje!",
+};
+
+// 인사 한글 발음 — 따라 말해 볼 수 있게
+const SAY: Record<string, string> = {
+  JPY: "타노시이 타비오", CNY: "뤼투 위콰이", VND: "쭉 쭈옌 디 부이 베", THB: "티아우 하이 사눅 나", PHP: "잉앗 사 비야헤",
+  TWD: "뤼투 위콰이", USD: "해브 어 그레잇 트립", HKD: "완딱 호이쌈", SGD: "해브 어 그레잇 트립", MYR: "슬라맛 버르추티",
+  IDR: "슬라맛 버를리부르", AUD: "해브 어 그레잇 트립", CAD: "봉 부아야주", EUR: "봉 부아야주", GBP: "해브 어 러블리 트립",
+  CHF: "구테 라이제", INR: "슈브 야트라", MXN: "부엔 비아헤",
+};
+
+// 히어로 글자 크기 — 칸 높이(cqh)로 키우되, 폭(cqw)에 한 줄로 들어가는 만큼만. 두 줄로 접히면 무너져 보인다.
+// 폭은 글자 수로 어림: 한중일·한글은 1em, 나머지는 0.6em
+const fit = (text: string, hPct: number, min: number, max: number) => {
+  const em = [...text].reduce((w, ch) => w + (/[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(ch) ? 1 : 0.6), 0);
+  return `clamp(${min}px, min(${hPct}cqh, ${(92 / em).toFixed(2)}cqw), ${max}px)`;
 };
 
 // 인사 음성 — 브라우저 내장 음성은 기기마다 로봇 같거나 영어가 어색해서, 나라별 원어민 음성(Microsoft Edge 신경망)을 미리 구워 둔 mp3.
