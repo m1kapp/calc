@@ -101,12 +101,12 @@ function Calculator() {
           </h1>
           <div className="flex shrink-0 items-center gap-1.5">
             {/* 설치할 수 있을 때만 보인다(설치됨·지원 안 함이면 사라짐). 인스타·카톡 안이면 바깥 브라우저로 여는 법 안내 */}
-            <PWAInstallButton variant="chip" label="설치" appName="환율계산기" iconSrc="/icon-192.png" className={ICON_ONLY} />
+            <PWAInstallButton variant="ghost" label="설치" appName="여행용 환율계산기" iconSrc="/icon-192.png" />
             <button onClick={() => setViewing(true)} aria-label="최근 계산"
               className="flex items-center justify-center size-8 rounded-full text-zinc-500 hover:bg-zinc-100 active:bg-zinc-100 active:scale-95 transition">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
             </button>
-            <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" className={ICON_ONLY} />
+            <ShareButton url={`https://calc.m1k.app/${code.toLowerCase()}`} title={`${c.name} 여행용 환율계산기`} label="공유" variant="ghost" />
           </div>
         </div>
       </AppShellHeader>
@@ -255,8 +255,6 @@ const GREET: Record<string, string> = {
 type Hist = { code: string; krwFirst: boolean; n: number; top: string; bottom: string; at: number };
 const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60e3); return m < 1 ? "방금" : m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`; };
 
-// 400px 미만(아이폰 393 포함)에선 헤더 알약을 아이콘만 — 제목의 "여행용"을 지키려고. 글자는 0px 로 남겨 화면낭독기 이름은 그대로. kit 의 text-sm 을 이기려고 !
-const ICON_ONLY = "max-[399px]:text-[0px]! max-[399px]:gap-0! max-[399px]:px-2.5! max-[399px]:h-8!";
 
 const RATE_BTN = "shrink-0 flex items-center justify-center gap-1 min-w-[4.25rem] h-7 px-2 rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600 active:scale-95 transition-transform";
 
