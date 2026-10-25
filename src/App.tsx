@@ -9,7 +9,8 @@ const TRACK_SLUG = "gN";
 export default function App() {
   return (
     <Watermark color={watermarkTint(ACCENT)} text="calc" trackSlug={TRACK_SLUG} claimed>
-      <AppShell accent={ACCENT}>
+      {/* 액자 배경은 투명, 흰색은 안쪽 칸이 칠한다 — 액자 흰 배경이 둥근 모서리 아래로 비쳐 어두운 키패드 모서리에 흰 테가 생겼다 */}
+      <AppShell accent={ACCENT} style={{ background: "transparent" }}>
         <Calculator />
       </AppShell>
     </Watermark>
@@ -75,7 +76,7 @@ function Calculator() {
 
   return (
     <>
-      <AppShellHeader>
+      <AppShellHeader className="bg-white!">
         <div className="flex items-center justify-between w-full gap-2">
           <h1 className="min-w-0 truncate text-lg max-[359px]:text-base font-black tracking-tight text-zinc-900">
             <span style={{ color: ACCENT }}>{c.name}<span className="max-[399px]:hidden"> 여행용</span></span> 환율계산기
@@ -90,7 +91,7 @@ function Calculator() {
         </div>
       </AppShellHeader>
       <AppShellContent>
-        <div className="flex flex-col min-h-full">
+        <div className="flex flex-col min-h-full bg-white">
           {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다 */}
           <div className="flex-[1_1_0px] min-h-0 flex flex-col items-center justify-center overflow-hidden select-none" aria-hidden="true">
             <div className="hidden roomy:block! text-center">
