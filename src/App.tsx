@@ -101,7 +101,8 @@ function Calculator() {
 
   return (
     <>
-      <AppShellHeader className="bg-white!">
+      {/* 이 앱은 밝은 화면만 — 배경만 흰색으로 고정하면 다크 모드에서 테두리만 kit 의 dark:border-zinc-800 이 돼 검은 줄이 생긴다 */}
+      <AppShellHeader className="bg-white! border-zinc-100!">
         <div className="flex items-center justify-between w-full gap-2">
           <h1 className="min-w-0 truncate text-lg max-[359px]:text-base font-black tracking-tight text-zinc-900">
             <span style={{ color: ACCENT }}>{c.name} 여행용</span> 환율계산기
