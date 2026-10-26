@@ -61,7 +61,8 @@ function Calculator() {
   const pt = ppptab ?? PPP;
 
   const c = findCurrency(code);
-  const [text, pron] = phrases(code)[line];
+  const list = phrases(code), at = line % list.length; // 나라마다 문장 수가 달라 바꿀 때 넘치지 않게
+  const [text, pron, mean = MEAN[at]] = list[at];
   const listen = (i: number) => { setLine(i); say(code, i, (dur) => setFill({ n: Date.now(), dur })); };
   useEffect(() => {
     history.replaceState(null, "", `/${code.toLowerCase()}`);
@@ -125,19 +126,19 @@ function Calculator() {
           <div className="hero relative flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
             {/* 좌우 화살표로 다른 문장 — 넘기면 바로 읽어 준다 */}
             {([-1, 1] as const).map((d) => (
-              <button key={d} onClick={() => listen((line + d + MEAN.length) % MEAN.length)} aria-label={d < 0 ? "이전 문장" : "다음 문장"}
+              <button key={d} onClick={() => listen((at + d + list.length) % list.length)} aria-label={d < 0 ? "이전 문장" : "다음 문장"}
                 className={`hero-in absolute top-1/2 -translate-y-1/2 ${d < 0 ? "left-1" : "right-1"} flex items-center justify-center size-10 text-zinc-300 active:scale-90 transition-transform`}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points={d < 0 ? "15 6 9 12 15 18" : "9 6 15 12 9 18"} /></svg>
               </button>
             ))}
             {/* 누르면 현지 발음으로 읽어 준다(public/greet/<통화>/<번호>.mp3) */}
-            <button onClick={() => listen(line)} aria-label={`${text} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
+            <button onClick={() => listen(at)} aria-label={`${text} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
               {/* 읽는 동안 왼쪽부터 색이 차오른다 — 옅은 글자 위에 진한 글자를 겹치고 잘린 폭을 늘린다 */}
               <div className="relative font-black leading-tight whitespace-nowrap" style={{ fontSize: fit(text, 30, 16, 44) }}>
                 <span style={{ color: ACCENT, opacity: 0.32 }}>{text}</span>
                 {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{text}</span>}
               </div>
-              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${MEAN[line]} 🔊`, 12, 11, 15) }}>{pron} · {MEAN[line]} <span className="emoji">🔊</span></div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${mean} 🔊`, 12, 11, 15) }}>{pron} · {mean} <span className="emoji">🔊</span></div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
