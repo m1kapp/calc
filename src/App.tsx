@@ -102,8 +102,9 @@ function Calculator() {
 
   return (
     <>
-      {/* 이 앱은 밝은 화면만 — 배경만 흰색으로 고정하면 다크 모드에서 테두리만 kit 의 dark:border-zinc-800 이 돼 검은 줄이 생긴다 */}
-      <AppShellHeader className="bg-white! border-zinc-100!">
+      {/* 이 앱은 밝은 화면만 — 배경만 흰색으로 고정하면 다크 모드에서 테두리만 kit 의 dark:border-zinc-800 이 된다.
+          흰 그림자: 액자 배경이 투명이라 화면 배율이 소수(Orca 등)면 헤더와 본문 사이 1px 틈으로 바깥 어두운 배경이 비쳤다 */}
+      <AppShellHeader className="bg-white! border-zinc-100! shadow-[0_2px_0_white]">
         <div className="flex items-center justify-between w-full gap-2">
           <h1 className="min-w-0 truncate text-lg max-[359px]:text-base font-black tracking-tight text-zinc-900">
             <span style={{ color: ACCENT }}>{c.name} 여행용</span> 환율계산기
@@ -138,7 +139,10 @@ function Calculator() {
                 <span style={{ color: ACCENT, opacity: 0.32 }}>{text}</span>
                 {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{text}</span>}
               </div>
-              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${mean} 🔊`, 12, 11, 15) }}>{pron} · {mean} <span className="emoji">🔊</span></div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${at + 1}/${list.length} ${pron} · ${mean} 🔊`, 12, 10, 15) }}>
+                {/* 몇 번째인지 — "오, 많네" 하고 넘겨 보게 */}
+                <span className="tabular-nums text-zinc-300">{at + 1}/{list.length}</span> {pron} · {mean} <span className="emoji">🔊</span>
+              </div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
@@ -286,11 +290,11 @@ function Calculator() {
 
 const won = (n: number) => `${korean(n) || Math.round(n).toLocaleString()}원`;
 
-// 히어로 글자 크기 — 칸 높이(cqh)로 키우되, 폭(cqw)에 한 줄로 들어가는 만큼만. 두 줄로 접히면 무너져 보인다. 양옆 화살표 자리를 빼고 76%
+// 히어로 글자 크기 — 칸 높이(cqh)로 키우되, 폭(cqw)에 한 줄로 들어가는 만큼만. 두 줄로 접히면 무너져 보인다. 양옆 화살표 자리를 빼고 72%(320px 폭에서 실측)
 // 폭은 글자 수로 어림: 한중일·한글은 1em, 나머지는 0.6em
 const fit = (text: string, hPct: number, min: number, max: number) => {
   const em = [...text].reduce((w, ch) => w + (/[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(ch) ? 1 : 0.6), 0);
-  return `clamp(${min}px, min(${hPct}cqh, ${(76 / em).toFixed(2)}cqw), ${max}px)`;
+  return `clamp(${min}px, min(${hPct}cqh, ${(72 / em).toFixed(2)}cqw), ${max}px)`;
 };
 
 // 현지어 음성 — 브라우저 내장 음성은 기기마다 로봇 같거나 영어가 어색해서, 나라별 원어민 음성(Microsoft Edge 신경망)을 미리 구워 둔 mp3(scripts/greet.mjs).
