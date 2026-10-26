@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, InAppSheet, PWAInstallButton, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
 import { BIGMAC, bigmac, IPHONE, iphone, rankBy, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
+import { MEAN, phrases, VOICE } from "./phrases";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -29,7 +30,9 @@ function Calculator() {
   const [mactab, setMactab] = useLocalStorage<(BigMac & { at: number }) | null>("calc:bigmac", null);
   const [ppptab, setPpptab] = useLocalStorage<(Ppp & { at: number }) | null>("calc:ppp", null);
   const [calc, setCalc] = useState<Calc>(EMPTY);
-  const [fill, setFill] = useState<{ n: number; dur: number } | null>(null); // 인사 읽는 중 색 채우기
+  const [fill, setFill] = useState<{ n: number; dur: number } | null>(null); // 현지어 읽는 중 색 채우기
+  // 히어로 한 줄은 열 때마다 랜덤. 한 번 들은 뒤 다시 누르면 다음 문장
+  const [line, setLine] = useState(() => ({ i: Math.floor(Math.random() * MEAN.length), heard: false }));
   const [krwFirst, setKrwFirst] = useState(false); // 위 칸에 원화를 넣고 외화를 본다
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -59,6 +62,7 @@ function Calculator() {
   const pt = ppptab ?? PPP;
 
   const c = findCurrency(code);
+  const [text, pron] = phrases(code)[line.i];
   useEffect(() => {
     history.replaceState(null, "", `/${code.toLowerCase()}`);
     document.title = `${c.name} 여행용 환율계산기`;
@@ -118,14 +122,18 @@ function Calculator() {
           {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다.
               빈칸은 히어로(현지어 여행 인사)가 채운다: 칸 높이(cqh)에 맞춰 글자가 커지고 작아지며, 낮으면 인사 한 줄만, 더 낮으면 숨는다(index.css .hero) */}
           <div className="hero flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
-            {/* 누르면 현지 발음으로 읽어 준다(public/greet/*.mp3) */}
-            <button onClick={() => greet(code, (dur) => setFill({ n: Date.now(), dur }))} aria-label={`${GREET[code]} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
+            {/* 누르면 현지 발음으로 읽어 준다(public/greet/<통화>/<번호>.mp3) */}
+            <button onClick={() => {
+              const i = line.heard ? (line.i + 1) % MEAN.length : line.i;
+              setLine({ i, heard: true });
+              say(code, i, (dur) => setFill({ n: Date.now(), dur }));
+            }} aria-label={`${text} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
               {/* 읽는 동안 왼쪽부터 색이 차오른다 — 옅은 글자 위에 진한 글자를 겹치고 잘린 폭을 늘린다 */}
-              <div className="relative font-black leading-tight whitespace-nowrap" style={{ fontSize: fit(GREET[code], 30, 16, 44) }}>
-                <span style={{ color: ACCENT, opacity: 0.32 }}>{GREET[code]}</span>
-                {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{GREET[code]}</span>}
+              <div className="relative font-black leading-tight whitespace-nowrap" style={{ fontSize: fit(text, 30, 16, 44) }}>
+                <span style={{ color: ACCENT, opacity: 0.32 }}>{text}</span>
+                {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{text}</span>}
               </div>
-              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${SAY[code]} · 즐거운 여행 🔊`, 12, 11, 15) }}>{SAY[code]} · 즐거운 여행 <span className="emoji">🔊</span></div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${MEAN[line.i]} 🔊`, 12, 11, 15) }}>{pron} · {MEAN[line.i]} <span className="emoji">🔊</span></div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
@@ -273,22 +281,6 @@ function Calculator() {
 
 const won = (n: number) => `${korean(n) || Math.round(n).toLocaleString()}원`;
 
-// 빈칸을 채우는 현지어 여행 인사
-const GREET: Record<string, string> = {
-  JPY: "楽しい旅を!", CNY: "旅途愉快!", VND: "Chúc chuyến đi vui vẻ!", THB: "เที่ยวให้สนุกนะ!", PHP: "Ingat sa biyahe!",
-  TWD: "旅途愉快!", USD: "Have a great trip!", HKD: "玩得開心!", SGD: "Have a great trip!", MYR: "Selamat bercuti!",
-  IDR: "Selamat berlibur!", AUD: "Have a great trip!", CAD: "Bon voyage!", EUR: "Bon voyage!", GBP: "Have a lovely trip!",
-  CHF: "Gute Reise!", INR: "शुभ यात्रा!", MXN: "¡Buen viaje!",
-};
-
-// 인사 한글 발음 — 따라 말해 볼 수 있게
-const SAY: Record<string, string> = {
-  JPY: "타노시이 타비오", CNY: "뤼투 위콰이", VND: "쭉 쭈옌 디 부이 베", THB: "티아우 하이 사눅 나", PHP: "잉앗 사 비야헤",
-  TWD: "뤼투 위콰이", USD: "해브 어 그레잇 트립", HKD: "완딱 호이쌈", SGD: "해브 어 그레잇 트립", MYR: "슬라맛 버르추티",
-  IDR: "슬라맛 버를리부르", AUD: "해브 어 그레잇 트립", CAD: "봉 부아야주", EUR: "봉 부아야주", GBP: "해브 어 러블리 트립",
-  CHF: "구테 라이제", INR: "슈브 야트라", MXN: "부엔 비아헤",
-};
-
 // 히어로 글자 크기 — 칸 높이(cqh)로 키우되, 폭(cqw)에 한 줄로 들어가는 만큼만. 두 줄로 접히면 무너져 보인다.
 // 폭은 글자 수로 어림: 한중일·한글은 1em, 나머지는 0.6em
 const fit = (text: string, hPct: number, min: number, max: number) => {
@@ -296,22 +288,18 @@ const fit = (text: string, hPct: number, min: number, max: number) => {
   return `clamp(${min}px, min(${hPct}cqh, ${(92 / em).toFixed(2)}cqw), ${max}px)`;
 };
 
-// 인사 음성 — 브라우저 내장 음성은 기기마다 로봇 같거나 영어가 어색해서, 나라별 원어민 음성(Microsoft Edge 신경망)을 미리 구워 둔 mp3.
-// 못 받으면(오프라인 첫 실행 등) 내장 음성으로. CAD 는 Bon voyage 라 프랑스어(캐나다)
-const LANG: Record<string, string> = {
-  JPY: "ja-JP", CNY: "zh-CN", VND: "vi-VN", THB: "th-TH", PHP: "fil-PH", TWD: "zh-TW", USD: "en-US", HKD: "zh-HK", SGD: "en-SG",
-  MYR: "ms-MY", IDR: "id-ID", AUD: "en-AU", CAD: "fr-CA", EUR: "fr-FR", GBP: "en-GB", CHF: "de-CH", INR: "hi-IN", MXN: "es-MX",
-};
+// 현지어 음성 — 브라우저 내장 음성은 기기마다 로봇 같거나 영어가 어색해서, 나라별 원어민 음성(Microsoft Edge 신경망)을 미리 구워 둔 mp3(scripts/greet.mjs).
+// 못 받으면(오프라인 첫 실행 등) 내장 음성으로
 let playing: HTMLAudioElement | null = null;
 // onStart(초): 소리가 실제로 나기 시작할 때 길이를 알려 준다 — 색 채우기를 소리에 맞춘다
-const greet = (code: string, onStart: (dur: number) => void) => {
+const say = (code: string, i: number, onStart: (dur: number) => void) => {
   playing?.pause(); // 연타하면 겹치지 않고 처음부터
-  const a = (playing = new Audio(`/greet/${code.toLowerCase()}.mp3`));
+  const a = (playing = new Audio(`/greet/${code.toLowerCase()}/${i}.mp3`));
   a.onplaying = () => onStart(Number.isFinite(a.duration) ? a.duration : 1.8);
   a.play().catch(() => {
     if (!("speechSynthesis" in window)) return;
-    const u = new SpeechSynthesisUtterance(GREET[code]);
-    u.lang = LANG[code];
+    const u = new SpeechSynthesisUtterance(phrases(code)[i][0]);
+    u.lang = VOICE[code][1];
     u.onstart = () => onStart(1.8);
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
