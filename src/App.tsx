@@ -62,7 +62,7 @@ function Calculator() {
 
   const c = findCurrency(code);
   const list = phrases(code), at = line % list.length; // 나라마다 문장 수가 달라 바꿀 때 넘치지 않게
-  const [text, pron, mean = MEAN[at]] = list[at];
+  const [text, pron] = list[at], mean = MEAN[at];
   const listen = (i: number) => { setLine(i); say(code, i, (dur) => setFill({ n: Date.now(), dur })); };
   useEffect(() => {
     history.replaceState(null, "", `/${code.toLowerCase()}`);
