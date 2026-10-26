@@ -139,10 +139,7 @@ function Calculator() {
                 <span style={{ color: ACCENT, opacity: 0.32 }}>{text}</span>
                 {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{text}</span>}
               </div>
-              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${at + 1}/${list.length} ${pron} · ${mean} 🔊`, 12, 10, 15) }}>
-                {/* 몇 번째인지 — "오, 많네" 하고 넘겨 보게 */}
-                <span className="tabular-nums text-zinc-300">{at + 1}/{list.length}</span> {pron} · {mean} <span className="emoji">🔊</span>
-              </div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${mean} 🔊`, 12, 11, 15) }}>{pron} · {mean} <span className="emoji">🔊</span></div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
