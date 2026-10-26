@@ -31,8 +31,7 @@ function Calculator() {
   const [ppptab, setPpptab] = useLocalStorage<(Ppp & { at: number }) | null>("calc:ppp", null);
   const [calc, setCalc] = useState<Calc>(EMPTY);
   const [fill, setFill] = useState<{ n: number; dur: number } | null>(null); // 현지어 읽는 중 색 채우기
-  // 히어로 한 줄은 열 때마다 랜덤. 한 번 들은 뒤 다시 누르면 다음 문장
-  const [line, setLine] = useState(() => ({ i: Math.floor(Math.random() * MEAN.length), heard: false }));
+  const [line, setLine] = useState(() => Math.floor(Math.random() * MEAN.length)); // 히어로 문장 번호 — 열 때마다 랜덤, 좌우로 넘긴다
   const [krwFirst, setKrwFirst] = useState(false); // 위 칸에 원화를 넣고 외화를 본다
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -62,7 +61,8 @@ function Calculator() {
   const pt = ppptab ?? PPP;
 
   const c = findCurrency(code);
-  const [text, pron] = phrases(code)[line.i];
+  const [text, pron] = phrases(code)[line];
+  const listen = (i: number) => { setLine(i); say(code, i, (dur) => setFill({ n: Date.now(), dur })); };
   useEffect(() => {
     history.replaceState(null, "", `/${code.toLowerCase()}`);
     document.title = `${c.name} 여행용 환율계산기`;
@@ -121,19 +121,22 @@ function Calculator() {
         <div className="flex flex-col min-h-full bg-white">
           {/* 남는 높이는 숫자 위로 — 폰 계산기처럼 숫자는 키패드 바로 위에 붙는다.
               빈칸은 히어로(현지어 여행 인사)가 채운다: 칸 높이(cqh)에 맞춰 글자가 커지고 작아지며, 낮으면 인사 한 줄만, 더 낮으면 숨는다(index.css .hero) */}
-          <div className="hero flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
+          <div className="hero relative flex-[1_1_56px] short:flex-[1_1_0px]! min-h-0 flex flex-col items-center justify-center overflow-hidden select-none px-4 text-center">
+            {/* 좌우 화살표로 다른 문장 — 넘기면 바로 읽어 준다 */}
+            {([-1, 1] as const).map((d) => (
+              <button key={d} onClick={() => listen((line + d + MEAN.length) % MEAN.length)} aria-label={d < 0 ? "이전 문장" : "다음 문장"}
+                className={`hero-in absolute top-1/2 -translate-y-1/2 ${d < 0 ? "left-1" : "right-1"} flex items-center justify-center size-10 text-zinc-300 active:scale-90 transition-transform`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points={d < 0 ? "15 6 9 12 15 18" : "9 6 15 12 9 18"} /></svg>
+              </button>
+            ))}
             {/* 누르면 현지 발음으로 읽어 준다(public/greet/<통화>/<번호>.mp3) */}
-            <button onClick={() => {
-              const i = line.heard ? (line.i + 1) % MEAN.length : line.i;
-              setLine({ i, heard: true });
-              say(code, i, (dur) => setFill({ n: Date.now(), dur }));
-            }} aria-label={`${text} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
+            <button onClick={() => listen(line)} aria-label={`${text} 현지 발음 듣기`} className="hero-in active:scale-95 transition-transform">
               {/* 읽는 동안 왼쪽부터 색이 차오른다 — 옅은 글자 위에 진한 글자를 겹치고 잘린 폭을 늘린다 */}
               <div className="relative font-black leading-tight whitespace-nowrap" style={{ fontSize: fit(text, 30, 16, 44) }}>
                 <span style={{ color: ACCENT, opacity: 0.32 }}>{text}</span>
                 {fill && <span key={fill.n} className="absolute inset-0 hero-fill" style={{ color: ACCENT, animationDuration: `${fill.dur}s` }} onAnimationEnd={() => setFill(null)}>{text}</span>}
               </div>
-              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${MEAN[line.i]} 🔊`, 12, 11, 15) }}>{pron} · {MEAN[line.i]} <span className="emoji">🔊</span></div>
+              <div className="hero-sub mt-[2cqh] whitespace-nowrap text-zinc-400" style={{ fontSize: fit(`${pron} · ${MEAN[line]} 🔊`, 12, 11, 15) }}>{pron} · {MEAN[line]} <span className="emoji">🔊</span></div>
             </button>
           </div>
           {/* 지금 쓰는 환율 한 줄 — 눌러서 환전소 환율로 덮거나 실시간으로 되돌린다 */}
@@ -281,11 +284,11 @@ function Calculator() {
 
 const won = (n: number) => `${korean(n) || Math.round(n).toLocaleString()}원`;
 
-// 히어로 글자 크기 — 칸 높이(cqh)로 키우되, 폭(cqw)에 한 줄로 들어가는 만큼만. 두 줄로 접히면 무너져 보인다.
+// 히어로 글자 크기 — 칸 높이(cqh)로 키우되, 폭(cqw)에 한 줄로 들어가는 만큼만. 두 줄로 접히면 무너져 보인다. 양옆 화살표 자리를 빼고 76%
 // 폭은 글자 수로 어림: 한중일·한글은 1em, 나머지는 0.6em
 const fit = (text: string, hPct: number, min: number, max: number) => {
   const em = [...text].reduce((w, ch) => w + (/[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(ch) ? 1 : 0.6), 0);
-  return `clamp(${min}px, min(${hPct}cqh, ${(92 / em).toFixed(2)}cqw), ${max}px)`;
+  return `clamp(${min}px, min(${hPct}cqh, ${(76 / em).toFixed(2)}cqw), ${max}px)`;
 };
 
 // 현지어 음성 — 브라우저 내장 음성은 기기마다 로봇 같거나 영어가 어색해서, 나라별 원어민 음성(Microsoft Edge 신경망)을 미리 구워 둔 mp3(scripts/greet.mjs).
