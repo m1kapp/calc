@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppShell, AppShellContent, AppShellHeader, InAppSheet, PWAInstallButton, ShareButton, useLocalStorage, Watermark, watermarkTint } from "@m1kapp/kit";
 import { BIGMAC, bigmac, IPHONE, iphone, rankBy, CURRENCIES, EMPTY, fetchBigmac, fetchPpp, fetchRates, monthLabel, PPP, priceLevel, type BigMac, type Ppp, findCode, findCurrency, formatInput, korean, press, tapeText, roundFor, type Calc, type Key, type Rates } from "./fx";
-import { MEAN, phrases, VOICE } from "./phrases";
+import { firstLine, phrases, VOICE } from "./phrases";
 
 const ACCENT = "#3b82f6";
 // m1k.app 계정에 등록된 slug (Vite라 env 대신 prop). Watermark 가 배지 로드로 집계까지 한다 — 배지를 따로 달면 두 번 센다
@@ -31,7 +31,7 @@ function Calculator() {
   const [ppptab, setPpptab] = useLocalStorage<(Ppp & { at: number }) | null>("calc:ppp", null);
   const [calc, setCalc] = useState<Calc>(EMPTY);
   const [fill, setFill] = useState<{ n: number; dur: number } | null>(null); // 현지어 읽는 중 색 채우기
-  const [line, setLine] = useState(() => Math.floor(Math.random() * MEAN.length)); // 히어로 문장 번호 — 열 때마다 랜덤, 좌우로 넘긴다
+  const [line, setLine] = useState(() => firstLine(code)); // 히어로 문장 번호 — 열 때마다 랜덤, 좌우로 넘긴다
   const [krwFirst, setKrwFirst] = useState(false); // 위 칸에 원화를 넣고 외화를 본다
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -62,7 +62,7 @@ function Calculator() {
 
   const c = findCurrency(code);
   const list = phrases(code), at = line % list.length; // 나라마다 문장 수가 달라 바꿀 때 넘치지 않게
-  const [text, pron] = list[at], mean = MEAN[at];
+  const [text, pron, mean] = list[at];
   const listen = (i: number) => { setLine(i); say(code, i, (dur) => setFill({ n: Date.now(), dur })); };
   useEffect(() => {
     history.replaceState(null, "", `/${code.toLowerCase()}`);
